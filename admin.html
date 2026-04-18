@@ -490,9 +490,7 @@
 
         <div class="detail-section">
           <div class="detail-sec-title">Experiencia Laboral</div>
-          ${expBlock(c.e1emp,c.e1cargo,c.e1desde,c.e1hasta,c.e1desc)}
-          ${expBlock(c.e2emp,c.e2cargo,c.e2desde,c.e2hasta,c.e2desc)}
-          ${expBlock(c.e3emp,c.e3cargo,c.e3desde,c.e3hasta,'')}
+          ${(typeof c.experiencias === 'string' ? JSON.parse(c.experiencias || '[]') : (c.experiencias || [])).map(e => expBlock(e.emp, e.cargo, e.desde, e.hasta, e.desc)).join('') || '<div style="font-size:.8rem; color:#aaa;">Trayectoria no detallada.</div>'}
         </div>
 
         <div class="detail-section">
@@ -501,10 +499,10 @@
           ${c.edu2tit?`<div><strong>${c.edu2tit}</strong><br><span style="font-size:.8rem;color:#aaa;">${c.edu2inst||''} ${c.edu2anio?'· '+c.edu2anio:''}</span></div>`:''}
         </div>
 
-        ${c.skillsH||c.skillsS ? `<div class="detail-section">
+        ${c.skillsh||c.skillss ? `<div class="detail-section">
           <div class="detail-sec-title">Habilidades</div>
-          ${c.skillsH?`<div style="margin-bottom:.5rem;font-size:.82rem;color:#bbb;"><strong style="color:var(--cream);">Técnicas: </strong>${c.skillsH}</div>`:''}
-          ${c.skillsS?`<div style="font-size:.82rem;color:#bbb;"><strong style="color:var(--cream);">Personales: </strong>${c.skillsS}</div>`:''}
+          ${c.skillsh?`<div style="margin-bottom:.5rem;font-size:.82rem;color:#bbb;"><strong style="color:var(--cream);">Técnicas: </strong>${c.skillsh}</div>`:''}
+          ${c.skillss?`<div style="font-size:.82rem;color:#bbb;"><strong style="color:var(--cream);">Personales: </strong>${c.skillss}</div>`:''}
           ${c.idiomas?`<div style="font-size:.82rem;color:#bbb;margin-top:.3rem;"><strong style="color:var(--cream);">Idiomas: </strong>${c.idiomas}</div>`:''}
         </div>` : ''}
 
@@ -591,10 +589,7 @@
               <!-- Columna 1 -->
               <div>
                 <h3 style="font-size:.75rem; text-transform:uppercase; color:var(--gold-dark); letter-spacing:.1em; margin-bottom:1rem; border-bottom:1px solid rgba(201,168,76,.3); padding-bottom:.3rem;">Trayectoria Profesional</h3>
-                ${expBlock(c.e1emp,c.e1cargo,c.e1desde,c.e1hasta)}
-                ${expBlock(c.e2emp,c.e2cargo,c.e2desde,c.e2hasta)}
-                ${expBlock(c.e3emp,c.e3cargo,c.e3desde,c.e3hasta)}
-                ${!c.e1emp && !c.e2emp ? '<div style="font-size:.8rem; color:var(--gray);">Trayectoria no detallada.</div>' : ''}
+                ${(typeof c.experiencias === 'string' ? JSON.parse(c.experiencias || '[]') : (c.experiencias || [])).map(e => expBlock(e.emp, e.cargo, e.desde, e.hasta)).join('') || '<div style="font-size:.8rem; color:var(--gray);">Trayectoria no detallada.</div>'}
               </div>
 
               <!-- Columna 2 -->
@@ -606,8 +601,8 @@
                   ${c.edu2tit?`<div style="font-weight:600; font-size:.85rem; color:var(--brown); margin-top:.5rem;">${c.edu2tit}</div><div style="font-size:.8rem; color:var(--brown-mid);">${c.edu2inst||''}</div>`:''}
                 </div>
 
-                ${c.skillsH?`<div style="font-size:.82rem; margin-bottom:.4rem; color:#444;"><strong style="color:var(--brown);">Técnicas:</strong> ${c.skillsH}</div>`:''}
-                ${c.skillsS?`<div style="font-size:.82rem; margin-bottom:.4rem; color:#444;"><strong style="color:var(--brown);">Blandas:</strong> ${c.skillsS}</div>`:''}
+                ${c.skillsh?`<div style="font-size:.82rem; margin-bottom:.4rem; color:#444;"><strong style="color:var(--brown);">Técnicas:</strong> ${c.skillsh}</div>`:''}
+                ${c.skillss?`<div style="font-size:.82rem; margin-bottom:.4rem; color:#444;"><strong style="color:var(--brown);">Blandas:</strong> ${c.skillss}</div>`:''}
                 ${c.idiomas?`<div style="font-size:.82rem; color:#444;"><strong style="color:var(--brown);">Idiomas:</strong> ${c.idiomas}</div>`:''}
               </div>
             </div>

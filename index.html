@@ -593,6 +593,7 @@
     #print-target { display:none; }
 
     @media print {
+      body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
       body > *:not(#print-target) { display:none !important; }
       #print-target { display:block !important; }
       .cv-t2 { grid-template-columns:220px 1fr !important; }
@@ -721,6 +722,10 @@
         <!-- PANEL 1: Datos Personales -->
         <div class="form-panel active" id="panel-1">
           <div class="form-grid">
+            <div class="form-group span-2">
+              <label class="form-label" for="f-foto-file">Foto de Perfil Formal (Opcional)</label>
+              <input type="file" id="f-foto-file" accept="image/*" class="form-input" style="padding:.6rem;" onchange="encodeImageFileAsURL(this)">
+            </div>
             <div class="form-group">
               <label class="form-label" for="f-nombre">Nombre *</label>
               <input type="text" id="f-nombre" class="form-input" placeholder="Tu nombre">
@@ -861,77 +866,38 @@
 
         <!-- PANEL 4: Experiencia -->
         <div class="form-panel" id="panel-4">
-          <div class="exp-block">
-            <p class="exp-block-label">💼 Experiencia 1 (Más reciente)</p>
-            <div class="form-grid">
-              <div class="form-group">
-                <label class="form-label" for="f-e1-emp">Empresa / Empleador</label>
-                <input type="text" id="f-e1-emp" class="form-input" placeholder="Nombre de la empresa">
+          <div id="experiencias-container">
+            <div class="exp-block" id="exp-block-1">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                 <p class="exp-block-label">💼 Experiencia 1 (Más reciente)</p>
               </div>
-              <div class="form-group">
-                <label class="form-label" for="f-e1-cargo">Cargo / Puesto</label>
-                <input type="text" id="f-e1-cargo" class="form-input" placeholder="Tu rol">
-              </div>
-              <div class="form-group">
-                <label class="form-label" for="f-e1-desde">Desde</label>
-                <input type="text" id="f-e1-desde" class="form-input" placeholder="Ej: Marzo 2022">
-              </div>
-              <div class="form-group">
-                <label class="form-label" for="f-e1-hasta">Hasta</label>
-                <input type="text" id="f-e1-hasta" class="form-input" placeholder="Ej: Dic 2024 / Actualmente">
-              </div>
-              <div class="form-group span-2">
-                <label class="form-label" for="f-e1-desc">Tareas y logros principales</label>
-                <textarea id="f-e1-desc" class="form-textarea" placeholder="Describí tus responsabilidades y logros más relevantes..."></textarea>
-              </div>
-            </div>
-          </div>
-          <div class="exp-block">
-            <p class="exp-block-label">💼 Experiencia 2 (opcional)</p>
-            <div class="form-grid">
-              <div class="form-group">
-                <label class="form-label" for="f-e2-emp">Empresa / Empleador</label>
-                <input type="text" id="f-e2-emp" class="form-input" placeholder="Nombre">
-              </div>
-              <div class="form-group">
-                <label class="form-label" for="f-e2-cargo">Cargo</label>
-                <input type="text" id="f-e2-cargo" class="form-input" placeholder="Tu rol">
-              </div>
-              <div class="form-group">
-                <label class="form-label" for="f-e2-desde">Desde</label>
-                <input type="text" id="f-e2-desde" class="form-input" placeholder="Ej: 2020">
-              </div>
-              <div class="form-group">
-                <label class="form-label" for="f-e2-hasta">Hasta</label>
-                <input type="text" id="f-e2-hasta" class="form-input" placeholder="Ej: 2022">
-              </div>
-              <div class="form-group span-2">
-                <label class="form-label" for="f-e2-desc">Tareas principales</label>
-                <textarea id="f-e2-desc" class="form-textarea" placeholder="Describí tus responsabilidades..."></textarea>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label class="form-label">Empresa / Empleador</label>
+                  <input type="text" class="form-input dyn-emp" placeholder="Nombre de la empresa">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Cargo / Puesto</label>
+                  <input type="text" class="form-input dyn-cargo" placeholder="Tu rol">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Desde</label>
+                  <input type="text" class="form-input dyn-desde" placeholder="Ej: Marzo 2022">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Hasta</label>
+                  <input type="text" class="form-input dyn-hasta" placeholder="Ej: Dic 2024 / Actualmente">
+                </div>
+                <div class="form-group span-2">
+                  <label class="form-label">Tareas y logros principales</label>
+                  <textarea class="form-textarea dyn-desc" placeholder="Describí tus responsabilidades y logros más relevantes..."></textarea>
+                </div>
               </div>
             </div>
           </div>
-          <div class="exp-block">
-            <p class="exp-block-label">💼 Experiencia 3 (opcional)</p>
-            <div class="form-grid">
-              <div class="form-group">
-                <label class="form-label" for="f-e3-emp">Empresa / Empleador</label>
-                <input type="text" id="f-e3-emp" class="form-input" placeholder="Nombre">
-              </div>
-              <div class="form-group">
-                <label class="form-label" for="f-e3-cargo">Cargo</label>
-                <input type="text" id="f-e3-cargo" class="form-input" placeholder="Tu rol">
-              </div>
-              <div class="form-group">
-                <label class="form-label" for="f-e3-desde">Desde</label>
-                <input type="text" id="f-e3-desde" class="form-input" placeholder="Ej: 2018">
-              </div>
-              <div class="form-group">
-                <label class="form-label" for="f-e3-hasta">Hasta</label>
-                <input type="text" id="f-e3-hasta" class="form-input" placeholder="Ej: 2020">
-              </div>
-            </div>
-          </div>
+          
+          <button class="btn btn--outline" onclick="addExperience()" style="width:100%; margin-top:1rem; margin-bottom: 2rem; border-style:dashed;">+ Añadir otra experiencia laboral</button>
+
           <div class="form-nav">
             <button class="btn btn--outline" onclick="goTo(3)">← Anterior</button>
             <span class="form-progress">Paso 4 de 5</span>
@@ -1005,7 +971,6 @@
         <!-- Actions -->
         <div class="cv-action-bar">
           <button class="btn btn--primary" onclick="printSingle()">🖨️ Imprimir este modelo</button>
-          <button class="btn btn--outline" onclick="printAll()">📄 Imprimir los 5 modelos</button>
           <button class="btn btn--outline btn--sm" onclick="editForm()">✏️ Editar mis datos</button>
         </div>
 
@@ -1347,34 +1312,93 @@
         edu2tit   : v('f-edu2-tit'),
         edu2inst  : v('f-edu2-inst'),
         edu2anio  : v('f-edu2-anio'),
-        e1emp     : v('f-e1-emp'),  e1cargo: v('f-e1-cargo'), e1desde: v('f-e1-desde'), e1hasta: v('f-e1-hasta'), e1desc: v('f-e1-desc'),
-        e2emp     : v('f-e2-emp'),  e2cargo: v('f-e2-cargo'), e2desde: v('f-e2-desde'), e2hasta: v('f-e2-hasta'), e2desc: v('f-e2-desc'),
-        e3emp     : v('f-e3-emp'),  e3cargo: v('f-e3-cargo'), e3desde: v('f-e3-desde'), e3hasta: v('f-e3-hasta'),
-        skillsH   : v('f-skills-h'),
-        skillsS   : v('f-skills-s'),
+        experiencias: getExperiencias(),
+        foto      : CURRENT_PHOTO_B64,
+        skillsh   : v('f-skills-h'),
+        skillss   : v('f-skills-s'),
         idiomas   : v('f-idiomas'),
         consent   : document.getElementById('f-consent')?.checked || false,
         ts        : new Date().toISOString()
       };
     }
 
+    let expCount = 1;
+    function addExperience() {
+      if(expCount >= 10) return alert('Máximo 10 experiencias permitidas.');
+      expCount++;
+      const html = `
+          <div class="exp-block" id="exp-block-${expCount}">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+               <p class="exp-block-label">💼 Experiencia ${expCount}</p>
+               <button class="btn btn--ghost" style="padding: .2rem .5rem; font-size:.7rem; color: #e57373;" onclick="document.getElementById('exp-block-${expCount}').remove();">Eliminar</button>
+            </div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label">Empresa / Empleador</label>
+                <input type="text" class="form-input dyn-emp" placeholder="Nombre de la empresa">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Cargo / Puesto</label>
+                <input type="text" class="form-input dyn-cargo" placeholder="Tu rol">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Desde</label>
+                <input type="text" class="form-input dyn-desde" placeholder="Ej: Marzo 2022">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Hasta</label>
+                <input type="text" class="form-input dyn-hasta" placeholder="Ej: Actualmente">
+              </div>
+              <div class="form-group span-2">
+                <label class="form-label">Tareas y logros principales</label>
+                <textarea class="form-textarea dyn-desc" placeholder="Describí tus responsabilidades..."></textarea>
+              </div>
+            </div>
+          </div>
+      `;
+      document.getElementById('experiencias-container').insertAdjacentHTML('beforeend', html);
+    }
+
+    function getExperiencias() {
+       const arr = [];
+       document.querySelectorAll('.exp-block').forEach(b => {
+          const emp = b.querySelector('.dyn-emp').value.trim();
+          if(!emp) return;
+          arr.push({
+            emp: emp,
+            cargo: b.querySelector('.dyn-cargo')?.value.trim() || '',
+            desde: b.querySelector('.dyn-desde')?.value.trim() || '',
+            hasta: b.querySelector('.dyn-hasta')?.value.trim() || '',
+            desc: b.querySelector('.dyn-desc')?.value.trim() || ''
+          });
+       });
+       return arr;
+    }
+
+    let CURRENT_PHOTO_B64 = "";
+    function encodeImageFileAsURL(element) {
+      if (!element.files || !element.files[0]) return;
+      var file = element.files[0];
+      var reader = new FileReader();
+      reader.onloadend = function() {
+        CURRENT_PHOTO_B64 = reader.result;
+      }
+      reader.readAsDataURL(file);
+    }
+
     /* ================================================
        BUILD HTML HELPERS
     ================================================ */
     function expHTML(d) {
-      const exps = [
-        { emp:d.e1emp, cargo:d.e1cargo, desde:d.e1desde, hasta:d.e1hasta, desc:d.e1desc },
-        { emp:d.e2emp, cargo:d.e2cargo, desde:d.e2desde, hasta:d.e2hasta, desc:d.e2desc },
-        { emp:d.e3emp, cargo:d.e3cargo, desde:d.e3desde, hasta:d.e3hasta, desc:'' },
-      ];
-      const rows = exps.filter(e => e.emp).map(e => {
+      const exps = d.experiencias || [];
+      const rows = exps.map(e => {
         const period = [e.desde, e.hasta].filter(Boolean).join(' – ');
-        return `<div class="exp-item">
+        return `<div class="exp-item" style="page-break-inside: avoid;">
           <div class="exp-head">
             <span class="exp-co">${e.emp}</span>
             <span class="exp-date">${period}</span>
           </div>
-          <div class="exp-role">${e.cargo}</div>
+          <div class="exp-role">${e.cargo||''}</div>
           ${e.desc ? `<div class="exp-desc">${e.desc}</div>` : ''}
         </div>`;
       });
@@ -1402,7 +1426,7 @@
       const res   = d.resumen || 'Completá tu resumen profesional en el Paso 2 para que se muestre aquí.';
       const exp   = expHTML(d);
       const edu   = eduHTML(d);
-      const allSkills = [...skillList(d.skillsH), ...skillList(d.skillsS), ...skillList(d.idiomas)];
+      const allSkills = [...skillList(d.skillsh), ...skillList(d.skillss), ...skillList(d.idiomas)];
 
       /* T1 — Clásico */
       set('t1-name',   name);  set('t1-title', puesto);
@@ -1438,8 +1462,19 @@
       set('t5-email',  d.email); set('t5-tel', d.tel); set('t5-city', city);
       set('t5-resumen', res, true);
       html('t5-exp', exp); html('t5-edu', edu);
-      html('t5-skills-h', skillList(d.skillsH).map(s=>`<span class="cv-t5-skill-tag">${s}</span>`).join(''));
-      html('t5-skills-s', skillList(d.skillsS).map(s=>`<span class="cv-t5-skill-tag">${s}</span>`).join(''));
+      html('t5-skills-h', skillList(d.skillsh).map(s=>`<span class="cv-t5-skill-tag">${s}</span>`).join(''));
+      html('t5-skills-s', skillList(d.skillss).map(s=>`<span class="cv-t5-skill-tag">${s}</span>`).join(''));
+
+      // AVATAR / PHOTO INJECTION
+      document.querySelectorAll('.cv-t2-ava, .cv-t3-ava').forEach(el => {
+        if(d.foto) {
+           el.innerHTML = `<img src="${d.foto}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+           el.style.display = 'flex';
+           el.style.background = 'transparent';
+        } else {
+           el.style.display = 'none';
+        }
+      });
     }
 
     function set(id, val, isText) {
