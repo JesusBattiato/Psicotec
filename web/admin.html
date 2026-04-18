@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PSICOTEC — Panel Administrativo</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const supaUrl = 'https://mpbjcjsciodkqunquhbe.supabase.co';
+    const supaKey = 'sb_publishable_Uxulw0VL-Kxh2_hxxfjqMA_Ws7YwJJ1';
+    const supabase = window.supabase.createClient(supaUrl, supaKey);
+  </script>
+
+  <style>
+    :root {
+      --cream: #FAF8F5; --cream-dark: #F0EDE6;
+      --gold: #C9A84C; --gold-light: #E8D4A0; --gold-dark: #8B6914;
+      --brown: #2C2416; --brown-mid: #4A3728;
+      --white: #fff; --gray: #8A8478;
+      --green: #2E7D52; --red: #C0392B;
+      --font-serif: 'Cormorant Garamond', Georgia, serif;
+      --font-sans:  'DM Sans', system-ui, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: var(--font-sans); background: #1A1610; color: #e0d8cc; min-height: 100vh; }
+
+    /* LOGIN */
+    .login-screen {
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(135deg, #1A1610, #2C2416);
+    }
+    .login-card {
+      background: #2C2416; border: 1px solid rgba(201,168,76,.2);
+      border-radius: 8px; padding: 3rem; width: 380px; text-align: center;
+    }
+    .login-card h1 { font-family: var(--font-serif); font-size: 2rem; letter-spacing:.2em; color: var(--cream); margin-bottom:.25rem; }
+    .login-card p  { font-size:.75rem; letter-spacing:.12em; text-transform:uppercase; color: var(--gold); margin-bottom:2rem; }
+    .login-input {
+      width:100%; padding:.875rem 1rem; border:1.5px solid rgba(201,168,76,.25); border-radius:4px;
+      background:rgba(255,255,255,.05); font-family:var(--font-sans); font-size:.9rem;
+      color:var(--cream); margin-bottom:1rem; text-align:center; letter-spacing:.1em;
+    }
+    .login-input:focus { outline:none; border-color:var(--gold); background:rgba(255,255,255,.08); }
+    .login-btn {
+      width:100%; padding:.875rem; border:none; border-radius:4px;
+      background:linear-gradient(135deg,var(--gold-dark),var(--gold));
+      font-family:var(--font-sans); font-size:.82rem; font-weight:600;
+      letter-spacing:.1em; text-transform:uppercase; color:#fff; cursor:pointer;
+      transition:all .25s;
+    }
+    .login-btn:hover { background:linear-gradient(135deg,var(--brown),var(--gold-dark)); }
+    .login-error { color:#e57373; font-size:.82rem; margin-top:.75rem; }
+
+    /* MAIN */
+    .main { display:none; }
+    .topbar {
+      background: #2C2416; border-bottom:1px solid rgba(201,168,76,.15);
+      padding: 1rem 2rem; display:flex; align-items:center; justify-content:space-between;
+    }
+    .topbar-brand { font-family:var(--font-serif); font-size:1.3rem; letter-spacing:.2em; color:var(--cream); }
+    .topbar-sub   { font-size:.68rem; letter-spacing:.15em; text-transform:uppercase; color:var(--gold); }
+    .topbar-actions { display:flex; gap:1rem; align-items:center; }
+    .btn {
+      display:inline-flex; align-items:center; gap:.4rem;
+      padding:.6rem 1.25rem; border:none; border-radius:4px;
+      font-family:var(--font-sans); font-size:.75rem; font-weight:500;
+      letter-spacing:.08em; text-transform:uppercase; cursor:pointer; transition:all .2s;
+    }
+    .btn--gold   { background:linear-gradient(135deg,var(--gold-dark),var(--gold)); color:#fff; }
+    .btn--ghost  { background:rgba(255,255,255,.06); color:#ccc; border:1px solid rgba(255,255,255,.1); }
+    .btn--ghost:hover { background:rgba(255,255,255,.12); }
+    .btn--red    { background:rgba(192,57,43,.2); color:#e57373; border:1px solid rgba(192,57,43,.3); }
+
+    /* STATS BAR */
+    .stats-bar {
+      display:flex; gap:1.5rem; padding:1.5rem 2rem;
+      border-bottom:1px solid rgba(255,255,255,.06);
+    }
+    .stat-card {
+      background:rgba(255,255,255,.04); border:1px solid rgba(201,168,76,.12);
+      border-radius:6px; padding:1rem 1.5rem;
+    }
+    .stat-num   { font-family:var(--font-serif); font-size:1.8rem; color:var(--gold); display:block; }
+    .stat-label { font-size:.68rem; letter-spacing:.1em; text-transform:uppercase; color:var(--gray); }
+
+    /* FILTER BAR */
+    .filter-bar {
+      padding:1rem 2rem; display:flex; gap:1rem; align-items:center; flex-wrap:wrap;
+      border-bottom:1px solid rgba(255,255,255,.06);
+    }
+    .filter-input {
+      padding:.6rem 1rem; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1);
+      border-radius:4px; font-family:var(--font-sans); font-size:.85rem; color:var(--cream);
+      width:240px;
+    }
+    .filter-input:focus { outline:none; border-color:var(--gold); }
+    .filter-select {
+      padding:.6rem 1rem; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1);
+      border-radius:4px; font-family:var(--font-sans); font-size:.82rem; color:#ccc;
+    }
+    .filter-select option { background:#2C2416; }
+    .consent-toggle { display:flex; gap:.5rem; align-items:center; margin-left:auto; }
+    .consent-toggle label { font-size:.75rem; color:var(--gray); cursor:pointer; }
+
+    /* TABLE */
+    .table-container { padding:1.5rem 2rem; overflow-x:auto; }
+    table { width:100%; border-collapse:collapse; font-size:.82rem; }
+    thead th {
+      background:rgba(201,168,76,.08); color:var(--gold);
+      font-size:.65rem; font-weight:700; letter-spacing:.15em; text-transform:uppercase;
+      padding:.75rem 1rem; text-align:left; border-bottom:1px solid rgba(201,168,76,.15);
+    }
+    tbody tr {
+      border-bottom:1px solid rgba(255,255,255,.05);
+      transition:background .15s;
+    }
+    tbody tr:hover { background:rgba(255,255,255,.04); }
+    td { padding:.75rem 1rem; color:#ccc; vertical-align:middle; }
+    td.name    { font-weight:600; color:var(--cream); }
+    td.puesto  { color:var(--gold-light); }
+
+    .badge-consent { display:inline-block; padding:.15rem .55rem; border-radius:20px; font-size:.65rem; font-weight:700; letter-spacing:.08em; }
+    .badge-yes  { background:rgba(46,125,82,.2); color:#6FCF97; border:1px solid rgba(46,125,82,.3); }
+    .badge-no   { background:rgba(192,57,43,.15); color:#e57373; border:1px solid rgba(192,57,43,.2); }
+
+    .action-btn {
+      background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1);
+      border-radius:4px; padding:.3rem .65rem; font-size:.72rem; color:#bbb; cursor:pointer;
+      transition:all .15s; margin-right:.3rem;
+    }
+    .action-btn:hover { background:rgba(255,255,255,.12); color:#fff; }
+    .action-btn.del { border-color:rgba(192,57,43,.25); }
+    .action-btn.del:hover { background:rgba(192,57,43,.15); color:#e57373; }
+
+    /* DETAIL PANEL */
+    .detail-overlay {
+      display:none; position:fixed; inset:0; background:rgba(0,0,0,.75);
+      z-index:999; align-items:flex-start; justify-content:center; padding:2rem;
+      overflow-y:auto;
+    }
+    .detail-overlay.open { display:flex; }
+    .detail-panel {
+      background:#2C2416; border:1px solid rgba(201,168,76,.2);
+      border-radius:8px; padding:2.5rem; width:100%; max-width:680px;
+      margin:auto; position:relative;
+    }
+    .detail-close {
+      position:absolute; top:1rem; right:1rem;
+      background:rgba(255,255,255,.05); border:none; color:#ccc;
+      border-radius:50%; width:32px; height:32px; font-size:1.1rem;
+      cursor:pointer; display:flex; align-items:center; justify-content:center;
+    }
+    .detail-close:hover { background:rgba(255,255,255,.12); color:#fff; }
+    .detail-section { margin-bottom:1.5rem; }
+    .detail-sec-title {
+      font-size:.65rem; font-weight:700; letter-spacing:.2em; text-transform:uppercase;
+      color:var(--gold); border-bottom:1px solid rgba(201,168,76,.2);
+      padding-bottom:.4rem; margin-bottom:.75rem;
+    }
+    .detail-row { display:flex; gap:1rem; margin-bottom:.5rem; }
+    .detail-key { font-size:.75rem; color:var(--gray); min-width:120px; flex-shrink:0; }
+    .detail-val { font-size:.85rem; color:var(--cream); }
+
+    /* APRECIACION */
+    .apreciacion-box {
+      margin-top:1.5rem; padding:1.25rem;
+      background:rgba(201,168,76,.06); border:1px solid rgba(201,168,76,.2); border-radius:6px;
+    }
+    .apreciacion-box label { font-size:.68rem; font-weight:700; letter-spacing:.15em; text-transform:uppercase; color:var(--gold); display:block; margin-bottom:.5rem; }
+    .apreciacion-box textarea {
+      width:100%; padding:.75rem; background:rgba(0,0,0,.2); border:1px solid rgba(201,168,76,.2);
+      border-radius:4px; color:var(--cream); font-family:var(--font-sans); font-size:.875rem;
+      resize:vertical; min-height:80px;
+    }
+    .apreciacion-box textarea:focus { outline:none; border-color:var(--gold); }
+    .apreciacion-save {
+      margin-top:.75rem; padding:.55rem 1.25rem; background:var(--gold-dark); border:none;
+      border-radius:4px; color:#fff; font-family:var(--font-sans); font-size:.75rem;
+      font-weight:600; letter-spacing:.1em; text-transform:uppercase; cursor:pointer;
+    }
+    .apreciacion-save:hover { background:var(--gold); }
+
+    /* EMPTY */
+    .empty-state {
+      text-align:center; padding:5rem 2rem; color:var(--gray);
+    }
+    .empty-state .icon { font-size:3rem; margin-bottom:1rem; }
+    .empty-state p { font-size:.9rem; line-height:1.7; }
+
+    /* PRINT */
+    @media print {
+      .topbar, .stats-bar, .filter-bar, .topbar-actions, .action-btn { display:none!important; }
+      body { background:#fff; color:#000; }
+      table { font-size:.75rem; }
+      thead th { background:#F0EDE6; color:#2C2416; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- LOGIN -->
+  <div class="login-screen" id="login-screen">
+    <div class="login-card">
+      <h1>PSICOTEC</h1>
+      <p>Panel Administrativo · Acceso Privado</p>
+      <input type="password" id="pwd-input" class="login-input"
+             placeholder="Contraseña"
+             onkeydown="if(event.key==='Enter')doLogin()">
+      <button class="login-btn" onclick="doLogin()">Ingresar →</button>
+      <div class="login-error" id="login-error"></div>
+    </div>
+  </div>
+
+  <!-- MAIN APP -->
+  <div class="main" id="main-app">
+    <div class="topbar">
+      <div>
+        <div class="topbar-brand">PSICOTEC</div>
+        <div class="topbar-sub">Panel de Gestión · Bolsa de Trabajo</div>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn btn--gold" onclick="exportCSV()">⬇️ Exportar CSV</button>
+        <button class="btn btn--ghost" onclick="refreshView()">🔄 Actualizar</button>
+        <button class="btn btn--ghost" onclick="doLogout()">Cerrar sesión</button>
+      </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-bar" id="stats-bar"></div>
+
+    <!-- FILTERS -->
+    <div class="filter-bar">
+      <input type="text" class="filter-input" id="search-input"
+             placeholder="🔍 Buscar por nombre, puesto, ciudad..."
+             oninput="renderTable()">
+      <select class="filter-select" id="filter-consent" onchange="renderTable()">
+        <option value="">Todos los candidatos</option>
+        <option value="yes">Solo en la Bolsa (con consentimiento)</option>
+        <option value="no">Sin consentimiento</option>
+      </select>
+      <select class="filter-select" id="filter-sort" onchange="renderTable()">
+        <option value="desc">Más recientes primero</option>
+        <option value="asc">Más antiguos primero</option>
+      </select>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Nombre</th>
+            <th>Puesto buscado</th>
+            <th>Ciudad</th>
+            <th>Teléfono</th>
+            <th>Email</th>
+            <th>Bolsa</th>
+            <th>Fecha</th>
+            <th>Apreciación</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="candidates-table"></tbody>
+      </table>
+      <div class="empty-state" id="empty-state" style="display:none;">
+        <div class="icon">📭</div>
+        <p>Todavía no hay candidatos registrados.<br>Cuando alguien complete el formulario de CV, aparecerá acá.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- DETAIL OVERLAY -->
+  <div class="detail-overlay" id="detail-overlay">
+    <div class="detail-panel">
+      <button class="detail-close" onclick="closeDetail()">×</button>
+      <div id="detail-content"></div>
+    </div>
+  </div>
+
+  <script>
+    let ALl_CANDIDATES = [];
+
+    /* ====================================================
+       AUTH
+    ==================================================== */
+    const PASS_HASH = btoa('psicotec2026'); // simple obfuscation — not real security
+
+    function doLogin() {
+      const val = document.getElementById('pwd-input').value;
+      if (btoa(val) === PASS_HASH) {
+        sessionStorage.setItem('admin_auth', '1');
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('main-app').style.display = 'block';
+        refreshView();
+      } else {
+        document.getElementById('login-error').textContent = '⚠ Contraseña incorrecta.';
+      }
+    }
+
+    function doLogout() {
+      sessionStorage.removeItem('admin_auth');
+      location.reload();
+    }
+
+    // Auto-login si ya estaba logueado en esta sesión
+    if (sessionStorage.getItem('admin_auth') === '1') {
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('main-app').style.display = 'block';
+    }
+
+    /* ====================================================
+       DATA
+    ==================================================== */
+    async function fetchCandidates() {
+      const { data, error } = await supabase.from('candidates').select('*').order('created_at', { ascending: false });
+      if (error) {
+        console.error(error);
+        return [];
+      }
+      ALl_CANDIDATES = data || [];
+      return ALl_CANDIDATES;
+    }
+
+    async function saveApreciacion(id, text) {
+      await supabase.from('candidates').update({ apreciacion: text }).eq('id', id);
+    }
+
+    async function deleteCandidateRecord(id) {
+      await supabase.from('candidates').delete().eq('id', id);
+    }
+
+    /* ====================================================
+       STATS
+    ==================================================== */
+    function renderStats(all) {
+      const withConsent = all.filter(c => c.consent).length;
+      const today = all.filter(c => c.created_at && c.created_at.startsWith(new Date().toISOString().slice(0,10))).length;
+      const ap = all.filter(c => c.apreciacion && c.apreciacion.trim().length > 0).length;
+      document.getElementById('stats-bar').innerHTML = `
+        <div class="stat-card">
+          <span class="stat-num">${all.length}</span>
+          <span class="stat-label">Total candidatos</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-num" style="color:#6FCF97;">${withConsent}</span>
+          <span class="stat-label">En la Bolsa (con consentimiento)</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-num" style="color:#C9A84C;">${ap}</span>
+          <span class="stat-label">Con apreciación de Yair</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-num" style="color:#90CAF9;">${today}</span>
+          <span class="stat-label">Hoy</span>
+        </div>
+      `;
+    }
+
+    /* ====================================================
+       TABLE
+    ==================================================== */
+    async function refreshView() {
+      const btn = document.querySelector('.topbar-actions button:nth-child(2)');
+      const orig = btn.innerHTML;
+      btn.innerHTML = '⏳ Cargando...';
+      const data = await fetchCandidates();
+      renderStats(data);
+      renderTable();
+      btn.innerHTML = orig;
+    }
+
+    function renderTable() {
+      let data = ALl_CANDIDATES;
+      const search  = document.getElementById('search-input').value.toLowerCase();
+      const consent = document.getElementById('filter-consent').value;
+      const sort    = document.getElementById('filter-sort').value;
+
+      if (search) {
+        data = data.filter(c =>
+          `${c.nombre} ${c.apellido} ${c.puesto} ${c.ciudad} ${c.email}`.toLowerCase().includes(search)
+        );
+      }
+      if (consent === 'yes') data = data.filter(c => c.consent);
+      if (consent === 'no')  data = data.filter(c => !c.consent);
+
+      data = [...data].sort((a,b) => {
+        const ta = new Date(a.created_at||0), tb = new Date(b.created_at||0);
+        return sort === 'asc' ? ta-tb : tb-ta;
+      });
+
+      const tbody = document.getElementById('candidates-table');
+      const empty = document.getElementById('empty-state');
+
+      if (!data.length) {
+        tbody.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+      empty.style.display = 'none';
+
+      tbody.innerHTML = data.map((c, i) => {
+        const ts = c.created_at ? new Date(c.created_at).toLocaleDateString('es-AR') : '—';
+        const apText = c.apreciacion && c.apreciacion.trim() ? '✅' : '—';
+        const conBadge = c.consent
+          ? '<span class="badge-consent badge-yes">✓ Sí</span>'
+          : '<span class="badge-consent badge-no">No</span>';
+        return `<tr>
+          <td style="color:var(--gray); font-size:.75rem;">${i+1}</td>
+          <td class="name">${c.nombre||''} ${c.apellido||''}</td>
+          <td class="puesto">${c.puesto||c.titulo||'—'}</td>
+          <td>${[c.ciudad,c.provincia].filter(Boolean).join(', ')||'—'}</td>
+          <td><a href="tel:${c.tel}" style="color:#90CAF9;text-decoration:none;">${c.tel||'—'}</a></td>
+          <td style="font-size:.77rem;">${c.email||'—'}</td>
+          <td>${conBadge}</td>
+          <td style="font-size:.75rem;color:var(--gray);">${ts}</td>
+          <td style="font-size:.75rem;">${apText}</td>
+          <td>
+            <button class="action-btn" onclick="openDetail('${c.id}')">👁 Ver</button>
+            <button class="action-btn" onclick="openWA('${c.tel}','${c.nombre}')">💬 WA</button>
+            <button class="action-btn del" onclick="deleteCandidate('${c.id}')">🗑</button>
+          </td>
+        </tr>`;
+      }).join('');
+    }
+
+    /* ====================================================
+       DETAIL
+    ==================================================== */
+    function openDetail(id) {
+      const c = ALl_CANDIDATES.find(x => x.id === id);
+      if (!c) return;
+      const name = `${c.nombre||''} ${c.apellido||''}`.trim();
+      const city  = [c.ciudad, c.provincia].filter(Boolean).join(', ');
+
+      const row = (k,v) => v ? `<div class="detail-row"><span class="detail-key">${k}</span><span class="detail-val">${v}</span></div>` : '';
+      const expBlock = (emp, cargo, desde, hasta, desc) => emp ? `
+        <div style="margin-bottom:.75rem; padding:.75rem; background:rgba(0,0,0,.15); border-radius:4px;">
+          <div style="font-weight:600;color:var(--cream);">${emp}</div>
+          <div style="font-size:.8rem;color:var(--gold-light);">${cargo||''} ${desde||hasta?`· ${[desde,hasta].filter(Boolean).join(' – ')}`:''}</div>
+          ${desc?`<div style="font-size:.8rem;color:#bbb;margin-top:.3rem;">${desc}</div>`:''}
+        </div>` : '';
+
+      document.getElementById('detail-content').innerHTML = `
+        <h2 style="font-family:var(--font-serif);font-size:1.6rem;color:var(--cream);margin-bottom:.25rem;">${name||'Sin nombre'}</h2>
+        <div style="font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-bottom:1.5rem;">${c.puesto||c.titulo||'Puesto no especificado'}</div>
+
+        <div class="detail-section">
+          <div class="detail-sec-title">Datos de Contacto</div>
+          ${row('Email',    c.email)}
+          ${row('Teléfono', c.tel)}
+          ${row('Ciudad',   city)}
+          ${row('LinkedIn', c.linkedin)}
+          ${row('Modalidad',c.modalidad)}
+          ${row('Disponib.',c.disp)}
+          <div class="detail-row"><span class="detail-key">En la Bolsa</span><span class="detail-val">${c.consent?'✅ Sí, autorizó':'❌ No autorizó'}</span></div>
+        </div>
+
+        ${c.resumen ? `<div class="detail-section"><div class="detail-sec-title">Resumen Profesional</div><p style="font-size:.875rem;color:#bbb;line-height:1.7;">${c.resumen}</p></div>` : ''}
+
+        <div class="detail-section">
+          <div class="detail-sec-title">Experiencia Laboral</div>
+          ${expBlock(c.e1emp,c.e1cargo,c.e1desde,c.e1hasta,c.e1desc)}
+          ${expBlock(c.e2emp,c.e2cargo,c.e2desde,c.e2hasta,c.e2desc)}
+          ${expBlock(c.e3emp,c.e3cargo,c.e3desde,c.e3hasta,'')}
+        </div>
+
+        <div class="detail-section">
+          <div class="detail-sec-title">Educación</div>
+          ${c.edu1tit?`<div style="margin-bottom:.5rem;"><strong>${c.edu1tit}</strong>${c.edu1niv?' · '+c.edu1niv:''}<br><span style="font-size:.8rem;color:#aaa;">${c.edu1inst||''} ${c.edu1anio?'· '+c.edu1anio:''}</span></div>`:''}
+          ${c.edu2tit?`<div><strong>${c.edu2tit}</strong><br><span style="font-size:.8rem;color:#aaa;">${c.edu2inst||''} ${c.edu2anio?'· '+c.edu2anio:''}</span></div>`:''}
+        </div>
+
+        ${c.skillsH||c.skillsS ? `<div class="detail-section">
+          <div class="detail-sec-title">Habilidades</div>
+          ${c.skillsH?`<div style="margin-bottom:.5rem;font-size:.82rem;color:#bbb;"><strong style="color:var(--cream);">Técnicas: </strong>${c.skillsH}</div>`:''}
+          ${c.skillsS?`<div style="font-size:.82rem;color:#bbb;"><strong style="color:var(--cream);">Personales: </strong>${c.skillsS}</div>`:''}
+          ${c.idiomas?`<div style="font-size:.82rem;color:#bbb;margin-top:.3rem;"><strong style="color:var(--cream);">Idiomas: </strong>${c.idiomas}</div>`:''}
+        </div>` : ''}
+
+        <!-- APRECIACIÓN DE YAIR -->
+        <div class="apreciacion-box">
+          <label>🧠 Apreciación Psicológica de Yair — uso interno</label>
+          <textarea id="ap-textarea" placeholder="Escribí acá tu evaluación personal de este candidato (solo visible para vos)...">${c.apreciacion||''}</textarea>
+          <button class="apreciacion-save" onclick="guardarAp('${c.id}')">Guardar apreciación</button>
+        </div>
+      `;
+      document.getElementById('detail-overlay').classList.add('open');
+    }
+
+    function closeDetail() {
+      document.getElementById('detail-overlay').classList.remove('open');
+    }
+
+    async function guardarAp(id) {
+      const text = document.getElementById('ap-textarea')?.value?.trim() || '';
+      const btn = document.querySelector('.apreciacion-save');
+      btn.innerHTML = 'Guardando...';
+      btn.disabled = true;
+      await saveApreciacion(id, text);
+      await refreshView();
+      closeDetail();
+    }
+
+    /* ====================================================
+       ACTIONS
+    ==================================================== */
+    async function deleteCandidate(id) {
+      if (!confirm('¿Segura que querés eliminar este candidato? Esta acción no se puede deshacer.')) return;
+      await deleteCandidateRecord(id);
+      refreshView();
+    }
+
+    function openWA(tel, nombre) {
+      if (!tel) { alert('Este candidato no tiene teléfono registrado.'); return; }
+      const num = tel.replace(/\D/g,'');
+      const text = encodeURIComponent(`Hola ${nombre||'!'}, te contacto desde Psicotec...`);
+      window.open(`https://wa.me/549${num}?text=${text}`, '_blank');
+    }
+
+    /* ====================================================
+       EXPORT CSV
+    ==================================================== */
+    function exportCSV() {
+      const data = ALl_CANDIDATES;
+      if (!data.length) { alert('No hay candidatos para exportar.'); return; }
+
+      const headers = ['Nombre','Apellido','Puesto','Ciudad','Provincia','Email','Teléfono','Bolsa','Fecha','Apreciación'];
+      const rows = data.map(c => [
+        c.nombre||'', c.apellido||'', c.puesto||c.titulo||'', c.ciudad||'', c.provincia||'',
+        c.email||'', c.tel||'', c.consent?'Sí':'No',
+        c.created_at ? new Date(c.created_at).toLocaleDateString('es-AR') : '',
+        (c.apreciacion||'').replace(/\n/g,' ')
+      ].map(v => `"${String(v).replace(/"/g,'""')}"`).join(','));
+
+      const csv = [headers.join(','), ...rows].join('\n');
+      const blob = new Blob(['\uFEFF'+csv], { type:'text/csv;charset=utf-8;' });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href = url;
+      a.download = `psicotec-candidatos-${new Date().toISOString().slice(0,10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    /* ====================================================
+       INIT
+    ==================================================== */
+    if (sessionStorage.getItem('admin_auth') === '1') refreshView();
+
+    // Close detail on overlay click
+    document.getElementById('detail-overlay').addEventListener('click', e => {
+      if (e.target === e.currentTarget) closeDetail();
+    });
+  </script>
+</body>
+</html>
