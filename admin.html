@@ -196,6 +196,13 @@
       body { background:#fff; color:#000; }
       table { font-size:.75rem; }
       thead th { background:#F0EDE6; color:#2C2416; }
+      
+      body.printing-terna .main { display: none !important; }
+      body.printing-terna .detail-overlay { position: static !important; inset:0; background:none !important; padding:0 !important; display:block !important; }
+      body.printing-terna .detail-panel { max-width:100% !important; border:none !important; background:none !important; box-shadow:none !important; margin:0 !important; }
+      body.printing-terna .detail-close, body.printing-terna .terna-print-bar { display:none!important; }
+      body.printing-terna #terna-content { padding: 0 !important; }
+      @page { size: A4; margin: 1cm; }
     }
   </style>
 </head>
@@ -222,7 +229,8 @@
         <div class="topbar-sub">Panel de Gestión · Bolsa de Trabajo</div>
       </div>
       <div class="topbar-actions">
-        <button class="btn btn--gold" onclick="exportCSV()">⬇️ Exportar CSV</button>
+        <button class="btn btn--gold" id="btn-terna" onclick="openTerna()" disabled>📋 Generar Terna B2B (0)</button>
+        <button class="btn btn--ghost" onclick="exportCSV()">⬇️ Exportar CSV</button>
         <button class="btn btn--ghost" onclick="refreshView()">🔄 Actualizar</button>
         <button class="btn btn--ghost" onclick="doLogout()">Cerrar sesión</button>
       </div>
@@ -252,6 +260,7 @@
       <table>
         <thead>
           <tr>
+            <th>✓</th>
             <th>#</th>
             <th>Nombre</th>
             <th>Puesto buscado</th>
@@ -281,8 +290,24 @@
     </div>
   </div>
 
+  <!-- TERNA OVERLAY -->
+  <div class="detail-overlay" id="terna-overlay">
+    <div class="detail-panel" style="max-width: 800px; padding:0; background:#FAF8F5;">
+      <button class="detail-close" onclick="closeTerna()" style="color:#2C2416; background:rgba(0,0,0,.05); right: -45px; top: 0;">×</button>
+      
+      <div id="terna-content" style="padding: 3.5rem; color:#2C2416; background:#FAF8F5;">
+         <!-- Contenido generado por JS -->
+      </div>
+      
+      <div class="terna-print-bar" style="padding: 1.5rem; background:#2C2416; border-radius: 0 0 8px 8px; text-align:center;">
+        <button class="btn btn--gold" onclick="window.print()">🖨 Guardar Reporte PDF</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     let ALl_CANDIDATES = [];
+    let SELECTED_TERNA = new Set();
 
     /* ====================================================
        AUTH
@@ -408,7 +433,9 @@
         const conBadge = c.consent
           ? '<span class="badge-consent badge-yes">✓ Sí</span>'
           : '<span class="badge-consent badge-no">No</span>';
+        const isChecked = SELECTED_TERNA.has(c.id) ? 'checked' : '';
         return `<tr>
+          <td><input type="checkbox" onchange="toggleTerna('${c.id}')" ${isChecked}></td>
           <td style="color:var(--gray); font-size:.75rem;">${i+1}</td>
           <td class="name">${c.nombre||''} ${c.apellido||''}</td>
           <td class="puesto">${c.puesto||c.titulo||'—'}</td>
@@ -503,6 +530,98 @@
       await saveApreciacion(id, text);
       await refreshView();
       closeDetail();
+    }
+
+    /* ====================================================
+       TERNA B2B
+    ==================================================== */
+    function toggleTerna(id) {
+      if (SELECTED_TERNA.has(id)) SELECTED_TERNA.delete(id);
+      else SELECTED_TERNA.add(id);
+      const btn = document.getElementById('btn-terna');
+      btn.innerHTML = `📋 Generar Terna B2B (${SELECTED_TERNA.size})`;
+      btn.disabled = SELECTED_TERNA.size === 0;
+    }
+
+    function openTerna() {
+      if (SELECTED_TERNA.size === 0) return;
+      document.body.classList.add('printing-terna');
+      
+      const ternaList = ALl_CANDIDATES.filter(c => SELECTED_TERNA.has(c.id));
+      
+      let html = `
+        <div style="border-bottom:2px solid var(--gold); padding-bottom:1rem; margin-bottom:2.5rem; display:flex; justify-content:space-between; align-items:flex-end;">
+          <div>
+            <h1 style="font-family:var(--font-serif); font-size:2rem; color:var(--brown); margin:0; line-height:1;">PSICOTEC</h1>
+            <div style="font-size:.75rem; letter-spacing:.15em; text-transform:uppercase; color:var(--gold-dark); margin-top:.25rem;">Reporte pre-selección B2B</div>
+          </div>
+          <div style="font-size:.8rem; color:var(--gray); text-align:right;">
+            Confidencial<br>
+            Lic. Noelia Yair Maza - MP. 149
+          </div>
+        </div>
+      `;
+
+      ternaList.forEach((c, idx) => {
+        const initial = c.apellido ? c.apellido.charAt(0) + '.' : '';
+        const blindName = `${c.nombre||'Candidato'} ${initial}`.trim();
+        const city = [c.ciudad, c.provincia].filter(Boolean).join(', ');
+        
+        const expBlock = (emp, cargo, desde, hasta) => emp ? `
+          <div style="margin-bottom:.75rem;">
+            <div style="font-weight:600; font-size:.9rem; color:var(--brown);">${cargo||'Cargo no especificado'}</div>
+            <div style="font-size:.8rem; color:var(--brown-mid);">${emp} · ${[desde,hasta].filter(Boolean).join(' – ')}</div>
+          </div>` : '';
+
+        html += `
+          <div style="margin-bottom:2.5rem; padding-bottom:1.5rem; border-bottom:1px dashed rgba(201,168,76,.3); page-break-inside: avoid;">
+            <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:.5rem;">
+              <h2 style="font-family:var(--font-serif); font-size:1.6rem; margin:0; color:var(--brown);">${blindName}</h2>
+              <span style="font-size:.75rem; background:rgba(201,168,76,.12); color:var(--gold-dark); padding:.3rem .8rem; border-radius:20px; font-weight:600; letter-spacing:.05em; text-transform:uppercase;">${c.puesto||c.titulo||'Perfil Técnico'}</span>
+            </div>
+            
+            <div style="margin-bottom:1.5rem; font-size:.8rem; color:var(--brown-mid); display:flex; gap:1.5rem;">
+              <span>📍 **Zona:** ${city||'S/E'}</span>
+              <span>⏱ **Disponibilidad:** ${c.modalidad||'S/E'}</span>
+            </div>
+
+            ${c.resumen ? `<div style="font-size:.9rem; color:#444; line-height:1.6; margin-bottom:1.5rem; padding-left:1rem; border-left:2px solid var(--gold-light);"><em>"${c.resumen}"</em></div>` : ''}
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:2rem;">
+              <!-- Columna 1 -->
+              <div>
+                <h3 style="font-size:.75rem; text-transform:uppercase; color:var(--gold-dark); letter-spacing:.1em; margin-bottom:1rem; border-bottom:1px solid rgba(201,168,76,.3); padding-bottom:.3rem;">Trayectoria Profesional</h3>
+                ${expBlock(c.e1emp,c.e1cargo,c.e1desde,c.e1hasta)}
+                ${expBlock(c.e2emp,c.e2cargo,c.e2desde,c.e2hasta)}
+                ${expBlock(c.e3emp,c.e3cargo,c.e3desde,c.e3hasta)}
+                ${!c.e1emp && !c.e2emp ? '<div style="font-size:.8rem; color:var(--gray);">Trayectoria no detallada.</div>' : ''}
+              </div>
+
+              <!-- Columna 2 -->
+              <div>
+                <h3 style="font-size:.75rem; text-transform:uppercase; color:var(--gold-dark); letter-spacing:.1em; margin-bottom:1rem; border-bottom:1px solid rgba(201,168,76,.3); padding-bottom:.3rem;">Educación & Skills</h3>
+                
+                <div style="margin-bottom:1.25rem;">
+                  ${c.edu1tit?`<div style="font-weight:600; font-size:.85rem; color:var(--brown);">${c.edu1tit}</div><div style="font-size:.8rem; color:var(--brown-mid);">${c.edu1inst||''}</div>`:''}
+                  ${c.edu2tit?`<div style="font-weight:600; font-size:.85rem; color:var(--brown); margin-top:.5rem;">${c.edu2tit}</div><div style="font-size:.8rem; color:var(--brown-mid);">${c.edu2inst||''}</div>`:''}
+                </div>
+
+                ${c.skillsH?`<div style="font-size:.82rem; margin-bottom:.4rem; color:#444;"><strong style="color:var(--brown);">Técnicas:</strong> ${c.skillsH}</div>`:''}
+                ${c.skillsS?`<div style="font-size:.82rem; margin-bottom:.4rem; color:#444;"><strong style="color:var(--brown);">Blandas:</strong> ${c.skillsS}</div>`:''}
+                ${c.idiomas?`<div style="font-size:.82rem; color:#444;"><strong style="color:var(--brown);">Idiomas:</strong> ${c.idiomas}</div>`:''}
+              </div>
+            </div>
+          </div>
+        `;
+      });
+
+      document.getElementById('terna-content').innerHTML = html;
+      document.getElementById('terna-overlay').classList.add('open');
+    }
+
+    function closeTerna() {
+      document.getElementById('terna-overlay').classList.remove('open');
+      document.body.classList.remove('printing-terna');
     }
 
     /* ====================================================
