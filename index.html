@@ -222,6 +222,38 @@
       justify-content: center;
     }
 
+    .btn-magic {
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      padding: .35rem .75rem;
+      background: linear-gradient(135deg, #4A90E2, #9013FE);
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: .65rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      transition: all .2s;
+      margin-top: .6rem;
+      align-self: flex-start;
+      box-shadow: 0 4px 10px rgba(74, 144, 226, .2);
+    }
+
+    .btn-magic:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 15px rgba(74, 144, 226, .3);
+      filter: brightness(1.1);
+    }
+
+    .btn-magic:disabled {
+      background: #ccc;
+      cursor: wait;
+      transform: none;
+    }
+
     /* ==============================================
        NAVBAR
     ============================================== */
@@ -2050,6 +2082,7 @@
               <textarea id="f-resumen" class="form-textarea"
                 placeholder="Describí brevemente quién sos profesionalmente, tus puntos fuertes y qué tipo de puesto buscás. (2 a 4 oraciones)"
                 style="min-height:120px;"></textarea>
+              <button class="btn-magic" type="button" onclick="optimizeText('f-resumen', 'resumen')">✨ Sugerencia IA</button>
             </div>
             <div class="form-group">
               <label class="form-label" for="f-puesto">¿Qué puesto buscás? *</label>
@@ -2182,6 +2215,7 @@
                   <label class="form-label">Tareas y logros principales</label>
                   <textarea class="form-textarea dyn-desc"
                     placeholder="Describí tus responsabilidades y logros más relevantes..."></textarea>
+                  <button type="button" class="btn-magic" onclick="optimizeText(this.previousElementSibling, 'exp')">✨ Sugerencia IA</button>
                 </div>
               </div>
             </div>
@@ -2598,6 +2632,44 @@
       });
     });
 
+    /* ====================================================
+       AI SUGGESTION (Groq via Edge Function)
+    ==================================================== */
+    async function optimizeText(idOrElem, field) {
+      const input = (typeof idOrElem === 'string') ? document.getElementById(idOrElem) : idOrElem;
+      const originalText = input.value.trim();
+      if (!originalText || originalText.length < 10) {
+        return showToast('Texto corto', 'Escribí un poco más para que la IA pueda ayudarte.', '⚠️');
+      }
+
+      const btn = event.target;
+      const originalBtnText = btn.innerHTML;
+
+      btn.disabled = true;
+      btn.innerHTML = "⏳ Profesionalizando...";
+
+      try {
+        const { data, error } = await supabase.functions.invoke('psicotec-ai', {
+          body: { text: originalText, field: field }
+        });
+
+        if (error) throw error;
+
+        if (data && data.improvedText) {
+          if (confirm("✨ SUGERENCIA PSICOTEC:\n\n" + data.improvedText + "\n\n¿Querés usar esta versión?")) {
+            input.value = data.improvedText;
+            showToast('¡Texto optimizado!', 'Hemos actualizado el campo con la sugerencia de la IA.', '✨');
+          }
+        }
+      } catch (err) {
+        console.error("AI Error:", err);
+        showToast('Error IA', 'Hubo un problema al conectar con el servidor de IA.', '❌');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalBtnText;
+      }
+    }
+
     /* ================================================
        AUTH / SMART GATE (PASO 0)
     ================================================ */
@@ -2843,6 +2915,7 @@
               <div class="form-group span-2">
                 <label class="form-label">Tareas y logros principales</label>
                 <textarea class="form-textarea dyn-desc" placeholder="Describí tus responsabilidades..."></textarea>
+                <button type="button" class="btn-magic" onclick="optimizeText(this.previousElementSibling, 'exp')">✨ Sugerencia IA</button>
               </div>
             </div>
           </div>
