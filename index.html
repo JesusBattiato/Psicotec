@@ -2990,18 +2990,16 @@
         }`;
       document.head.appendChild(styleTag);
 
-      const cleanup = () => {
-        document.getElementById('ps-override')?.remove();
-        pt.style.display = 'none';
-        pt.innerHTML = '';
-        window.removeEventListener('afterprint', cleanup);
-      };
-
-      window.addEventListener('afterprint', cleanup);
-
+      // ESPERAR A QUE EL NAVEGADOR RENDERICE LOS CAMBIOS ANTES DE IMPRIMIR
       setTimeout(() => {
         window.print();
-        setTimeout(cleanup, 120000); 
+        
+        // ELIMINAR DESPUÉS DE 2 MINUTOS (Tiempo suficiente para configurar A4 y guardar)
+        setTimeout(() => {
+          document.getElementById('ps-override')?.remove();
+          pt.style.display = 'none';
+          pt.innerHTML = '';
+        }, 120000);
       }, 800);
     }
 
