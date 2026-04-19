@@ -2073,6 +2073,16 @@
                   <option>Flexible</option>
                 </select>
               </div>
+              <div class="form-group span-2">
+                <label class="form-label" for="f-reloc">¿Estás dispuesto a viajar o radicarte en otra ciudad/provincia?</label>
+                <select id="f-reloc" class="form-select">
+                  <option value="">Seleccioná...</option>
+                  <option>Sí, disponible para viajar y radicarme</option>
+                  <option>Solo para viajar temporalmente</option>
+                  <option>Solo para radicarme definitivamente</option>
+                  <option>No, busco trabajo solo en mi zona</option>
+                </select>
+              </div>
             </div>
           </div>
           <div class="form-nav">
@@ -2716,6 +2726,7 @@
       v('f-tel', d.tel); v('f-ciudad', d.ciudad); v('f-provincia', d.provincia);
       v('f-linkedin', d.linkedin); v('f-titulo', d.titulo); v('f-resumen', d.resumen);
       v('f-puesto', d.puesto); v('f-modalidad', d.modalidad); v('f-disponibilidad', d.disp);
+      v('f-reloc', d.reloc);
       v('f-edu1-tit', d.edu1tit); v('f-edu1-niv', d.edu1niv); v('f-edu1-inst', d.edu1inst); v('f-edu1-anio', d.edu1anio);
       v('f-edu2-tit', d.edu2tit); v('f-edu2-inst', d.edu2inst); v('f-edu2-anio', d.edu2anio);
       v('f-skills-h', d.skillsh); v('f-skills-s', d.skillss); v('f-idiomas', d.idiomas);
@@ -2778,6 +2789,7 @@
         puesto: v('f-puesto'),
         modalidad: v('f-modalidad'),
         disp: v('f-disponibilidad'),
+        reloc: v('f-reloc'),
         edu1tit: v('f-edu1-tit'),
         edu1niv: v('f-edu1-niv'),
         edu1inst: v('f-edu1-inst'),

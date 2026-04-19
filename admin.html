@@ -242,15 +242,31 @@
 
     <!-- FILTERS -->
     <div class="filter-bar">
-      <input type="text" class="filter-input" id="search-input"
-             placeholder="🔍 Buscar por nombre, puesto, ciudad..."
-             oninput="renderTable()">
-      <select class="filter-select" id="filter-consent" onchange="renderTable()">
-        <option value="">Todos los candidatos</option>
-        <option value="yes">Solo en la Bolsa (con consentimiento)</option>
+      <div class="form-group" style="flex:1; min-width:280px;">
+        <input type="text" id="search-input" class="filter-input" style="width:100%" placeholder="🔍 Buscar por nombre, puesto, ciudad, skills o empresa..." oninput="renderTable()">
+      </div>
+      
+      <select id="filter-reloc" class="filter-select" onchange="renderTable()">
+        <option value="all">📍 Radicación: Todos</option>
+        <option value="travel">Disp. p/ Viajar</option>
+        <option value="reloc">Disp. p/ Radicarse</option>
+        <option value="no">Solo zona local</option>
+      </select>
+
+      <select id="filter-edu" class="filter-select" onchange="renderTable()">
+        <option value="all">🎓 Educación: Todos</option>
+        <option value="sec_comp">Secundario Completo</option>
+        <option value="univ_inc">Univ/Tert Incompleto</option>
+        <option value="univ_comp">Univ/Tert Completo</option>
+      </select>
+
+      <select id="filter-consent" class="filter-select" onchange="renderTable()">
+        <option value="all">Bolsa: Todas</option>
+        <option value="yes">✓ Con consentimiento</option>
         <option value="no">Sin consentimiento</option>
       </select>
-      <select class="filter-select" id="filter-sort" onchange="renderTable()">
+      
+      <select id="filter-sort" class="filter-select" onchange="renderTable()">
         <option value="desc">Más recientes primero</option>
         <option value="asc">Más antiguos primero</option>
       </select>
@@ -412,17 +428,53 @@
     function renderTable() {
       let data = ALl_CANDIDATES;
       const search  = document.getElementById('search-input').value.toLowerCase();
+      const reloc   = document.getElementById('filter-reloc').value;
+      const edu     = document.getElementById('filter-edu').value;
       const consent = document.getElementById('filter-consent').value;
       const sort    = document.getElementById('filter-sort').value;
 
+      // 1. FULL TEXT SEARCH (Deep search)
       if (search) {
-        data = data.filter(c =>
-          `${c.nombre} ${c.apellido} ${c.puesto} ${c.ciudad} ${c.email}`.toLowerCase().includes(search)
-        );
+        data = data.filter(c => {
+          const main = `${c.nombre} ${c.apellido} ${c.puesto} ${c.titulo} ${c.ciudad} ${c.email} ${c.skillsh} ${c.skillss} ${c.resumen}`.toLowerCase();
+          const exps = (typeof c.experiencias === 'string' ? JSON.parse(c.experiencias || '[]') : (c.experiencias || []))
+            .map(e => `${e.emp} ${e.cargo} ${e.desc}`).join(' ').toLowerCase();
+          return main.includes(search) || exps.includes(search);
+        });
       }
+
+      // 2. RELOCATION FILTER
+      if (reloc !== 'all') {
+        data = data.filter(c => {
+          const r = (c.reloc || '').toLowerCase();
+          if (reloc === 'travel') return r.includes('viajar');
+          if (reloc === 'reloc')  return r.includes('radicarme');
+          if (reloc === 'no')     return r.includes('solo en mi zona');
+          return true;
+        });
+      }
+
+      // 3. EDUCATION FILTER
+      if (edu !== 'all') {
+        data = data.filter(c => {
+          const n1 = (c.edu1niv || '').toLowerCase();
+          const t1 = (c.edu1tit || '').toLowerCase();
+          const n2 = (c.edu2niv || '').toLowerCase();
+          const t2 = (c.edu2tit || '').toLowerCase();
+          const combined = `${n1} ${t1} ${n2} ${t2}`;
+          
+          if (edu === 'sec_comp') return combined.includes('secundaria completa') || combined.includes('secundario completo');
+          if (edu === 'univ_inc') return combined.includes('incompleto') && (combined.includes('universita') || combined.includes('terciario'));
+          if (edu === 'univ_comp') return combined.includes('completo') && (combined.includes('universita') || combined.includes('terciario'));
+          return true;
+        });
+      }
+
+      // 4. CONSENT FILTER
       if (consent === 'yes') data = data.filter(c => c.consent);
       if (consent === 'no')  data = data.filter(c => !c.consent);
 
+      // 5. SORT
       data = [...data].sort((a,b) => {
         const ta = new Date(a.created_at||0), tb = new Date(b.created_at||0);
         return sort === 'asc' ? ta-tb : tb-ta;
@@ -494,6 +546,7 @@
           ${row('LinkedIn', c.linkedin)}
           ${row('Modalidad',c.modalidad)}
           ${row('Disponib.',c.disp)}
+          ${row('Viaje/Radic.',c.reloc)}
           <div class="detail-row"><span class="detail-key">En la Bolsa</span><span class="detail-val">${c.consent?'✅ Sí, autorizó':'❌ No autorizó'}</span></div>
         </div>
 
