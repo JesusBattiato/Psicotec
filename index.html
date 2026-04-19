@@ -2944,13 +2944,38 @@
 
     function injectAndPrint(markup, forceBreaks) {
       const pt = document.getElementById('print-target');
-      pt.innerHTML = markup;
+      
+      // Botón para volver (solo visible en pantalla, no en impresión)
+      const backBtn = `
+        <div style="padding: 20px; text-align: center; background: #f8f9fa; border-bottom: 1px solid #ddd;" class="no-print">
+          <button onclick="cleanupPrint()" style="padding: 10px 20px; background: #1A2D50; color: white; border: none; border-radius: 5px; cursor: pointer; font-family: sans-serif;">
+            ⬅️ Volver a la edición
+          </button>
+          <p style="font-size: 12px; color: #666; margin-top: 5px;">Si ya terminaste de guardar tu PDF, hacé clic aquí para volver.</p>
+        </div>
+      `;
+      
+      pt.innerHTML = backBtn + markup;
       pt.style.display = 'block';
+
+      // Definimos cleanupPrint globalmente para el botón
+      window.cleanupPrint = () => {
+        document.getElementById('ps-override')?.remove();
+        pt.style.display = 'none';
+        pt.innerHTML = '';
+        document.getElementById('cv-results')?.scrollIntoView({ behavior: 'smooth' });
+        // Limpiamos el timer si existe
+        if (window.printTimer) clearTimeout(window.printTimer);
+      };
 
       const styleTag = document.createElement('style');
       styleTag.id = 'ps-override';
       styleTag.textContent = `
+        @media screen {
+          .no-print { display: block !important; }
+        }
         @media print {
+          .no-print { display: none !important; }
           html, body { 
             height: 100% !important; 
             margin: 0 !important; 
@@ -2994,12 +3019,8 @@
       setTimeout(() => {
         window.print();
         
-        // ELIMINAR DESPUÉS DE 2 MINUTOS (Tiempo suficiente para configurar A4 y guardar)
-        setTimeout(() => {
-          document.getElementById('ps-override')?.remove();
-          pt.style.display = 'none';
-          pt.innerHTML = '';
-        }, 120000);
+        // ELIMINAR DESPUÉS DE 2 MINUTOS (Fallback)
+        window.printTimer = setTimeout(window.cleanupPrint, 120000);
       }, 800);
     }
 
