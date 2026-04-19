@@ -331,7 +331,41 @@
     }
 
     .cv-wrap { display: none; }
-    .cv-wrap.visible { display: block; }
+    .cv-wrap.visible {
+      display: block;
+      overflow: hidden;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+    }
+    /* Evita desborde en texto largo dentro de todos los templates */
+    .cv-t1, .cv-t2, .cv-t3, .cv-t4, .cv-t5 {
+      overflow: hidden;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+    }
+    /* Toast de notificación propio (reemplaza alert) */
+    #ps-toast {
+      position: fixed; top: 1.5rem; left: 50%; transform: translateX(-50%) translateY(-120px);
+      z-index: 9999; min-width: 320px; max-width: 90vw;
+      background: var(--dark-navy); color: var(--cream);
+      border: 1px solid var(--gold); border-radius: 12px;
+      padding: 1.2rem 1.6rem; box-shadow: 0 8px 32px rgba(0,0,0,.35);
+      display: flex; align-items: flex-start; gap: 1rem;
+      transition: transform .4s cubic-bezier(.34,1.56,.64,1), opacity .3s;
+      opacity: 0;
+    }
+    #ps-toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+    #ps-toast-icon { font-size: 1.6rem; flex-shrink: 0; }
+    #ps-toast-body { flex: 1; }
+    #ps-toast-title { font-weight: 700; color: var(--gold); margin-bottom: .3rem; font-size: .95rem; }
+    #ps-toast-msg   { font-size: .85rem; color: var(--cream); line-height: 1.5; opacity: .9; }
+    #ps-toast-close {
+      background: none; border: none; color: var(--gold); font-size: 1.2rem;
+      cursor: pointer; flex-shrink: 0; padding: 0; line-height: 1;
+    }
 
     /* ==============================================
        CV TEMPLATE 1 — EJECUTIVO CLÁSICO
@@ -1297,7 +1331,8 @@
     async function checkEmailGate() {
       const emailInput = document.getElementById('f-gate-email').value.trim().toLowerCase();
       if (!emailInput || !emailInput.includes('@')) {
-         alert('Por favor ingresá un email válido.'); return;
+         showToast('Email inválido', 'Por favor ingresá un email válido.', '⚠️'); 
+         return;
       }
 
       const btn = document.getElementById('btn-gate-check');
@@ -1340,7 +1375,7 @@
 
         // 3. SI EXISTE → Magic Link
         btn.innerHTML = 'Enviando link...';
-        alert(`¡Qué bueno verte de nuevo! Encontramos tu perfil asociado a ${emailInput}.\n\nPara proteger tus datos, te hemos enviado un link directo a tu correo. Ábrelo para poder editar tu CV.`);
+        showToast('¡Hola de nuevo!', `Encontramos tu perfil asociado a ${emailInput}. Para proteger tus datos, te enviamos un link a tu correo para editar tu CV.`, '✨');
 
         const res = await queryWithTimeout(
           supabase.auth.signInWithOtp({
@@ -1379,9 +1414,40 @@
              document.querySelector('.form-stepper').style.display = 'flex';
              prefillForm(profile);
              goTo(1);
+             // Scroll directo a la sección del formulario al volver del Magic Link
+             setTimeout(() => {
+               document.getElementById('candidatos-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+             }, 400);
           }
        }
     });
+
+    /* ================================================
+       TOAST NOTIFICATION (reemplaza alert())
+    ================================================ */
+    function showToast(title, msg, icon = '✉️', duration = 6000) {
+      // Crear si no existe
+      if (!document.getElementById('ps-toast')) {
+        document.body.insertAdjacentHTML('beforeend', `
+          <div id="ps-toast">
+            <div id="ps-toast-icon"></div>
+            <div id="ps-toast-body">
+              <div id="ps-toast-title"></div>
+              <div id="ps-toast-msg"></div>
+            </div>
+            <button id="ps-toast-close" onclick="hideToast()">✕</button>
+          </div>`);
+      }
+      document.getElementById('ps-toast-icon').textContent = icon;
+      document.getElementById('ps-toast-title').textContent = title;
+      document.getElementById('ps-toast-msg').textContent = msg;
+      const t = document.getElementById('ps-toast');
+      t.classList.add('show');
+      if (duration) setTimeout(hideToast, duration);
+    }
+    function hideToast() {
+      document.getElementById('ps-toast')?.classList.remove('show');
+    }
 
     function prefillForm(d) {
        const v = (id, val) => { const e=document.getElementById(id); if(e) e.value = val||''; };
@@ -1428,6 +1494,9 @@
       });
       document.getElementById(`panel-${step}`).classList.add('active');
       currentStep = step;
+      // Siempre volvemos al top del formulario al cambiar de paso
+      const formSection = document.getElementById('candidatos-section');
+      if (formSection) formSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
     /* ================================================
