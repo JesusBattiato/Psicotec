@@ -1317,7 +1317,15 @@
           5000
         );
 
-        if (error) throw error;
+        // Si hay error de cualquier tipo (RLS, red, etc.) → dejamos pasar (baja fricción)
+        if (error) {
+          console.warn('Supabase query error (letting user through):', error.message);
+          document.getElementById('f-email').value = emailInput;
+          document.querySelector('.form-stepper').style.display = 'flex';
+          btn.innerHTML = origText; btn.disabled = false;
+          goTo(1);
+          return;
+        }
 
         // 2. Si NO existe → Alta nueva
         if (!data || data.length === 0) {
