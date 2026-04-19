@@ -31,6 +31,7 @@
       --gold-dark:   #8B6914;
       --brown:       #2C2416;
       --brown-mid:   #4A3728;
+      --dark-navy:   #1A1E26;
       --white:       #FFFFFF;
       --gray-light:  #F5F5F0;
       --gray-mid:    #8A8478;
@@ -347,9 +348,9 @@
     #ps-toast {
       position: fixed; top: 1.5rem; left: 50%; transform: translateX(-50%) translateY(-120px);
       z-index: 9999; min-width: 320px; max-width: 90vw;
-      background: var(--dark-navy); color: var(--cream);
+      background: #1A1E26; color: #FFFFFF;
       border: 1px solid var(--gold); border-radius: 12px;
-      padding: 1.2rem 1.6rem; box-shadow: 0 8px 32px rgba(0,0,0,.35);
+      padding: 1.25rem 1.75rem; box-shadow: 0 12px 48px rgba(0,0,0,.45);
       display: flex; align-items: flex-start; gap: 1rem;
       transition: transform .4s cubic-bezier(.34,1.56,.64,1), opacity .3s;
       opacity: 0;
@@ -360,8 +361,8 @@
     }
     #ps-toast-icon { font-size: 1.6rem; flex-shrink: 0; }
     #ps-toast-body { flex: 1; }
-    #ps-toast-title { font-weight: 700; color: var(--gold); margin-bottom: .3rem; font-size: .95rem; }
-    #ps-toast-msg   { font-size: .85rem; color: var(--cream); line-height: 1.5; opacity: .9; }
+    #ps-toast-title { font-weight: 700; color: var(--gold); margin-bottom: .3rem; font-size: 1rem; }
+    #ps-toast-msg   { font-size: .9rem; color: #FFFFFF; line-height: 1.6; }
     #ps-toast-close {
       background: none; border: none; color: var(--gold); font-size: 1.2rem;
       cursor: pointer; flex-shrink: 0; padding: 0; line-height: 1;
