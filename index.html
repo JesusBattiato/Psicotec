@@ -14,9 +14,8 @@
   <script>
     const supaUrl = 'https://mpbjcjsciodkqunquhbe.supabase.co';
     const supaKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1wYmpjanNjaW9ka3F1bnF1aGJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1MTkzNDksImV4cCI6MjA5MjA5NTM0OX0.8hVICziJLVEIIuDKdYwP28kOxuIGxuZhIB378u96xUk';
-    // Sobreescribimos window.supabase (la lib) con el cliente ya inicializado
-    // Evita el SyntaxError "already declared" al convivir con el CDN
-    window.supabase = window.supabase.createClient(supaUrl, supaKey);
+    // Usamos una constante local para el cliente, evitando sobreescribir window.supabase (la lib)
+    const supabase = window.supabase.createClient(supaUrl, supaKey);
   </script>
 
   <style>
@@ -897,7 +896,7 @@
             <p class="exp-block-label">📖 Formación Adicional / Cursos (opcional)</p>
             <div class="form-grid">
               <div class="form-group">
-                <label class="form-label" for="f-edu2-tit">Título / Cours</label>
+                <label class="form-label" for="f-edu2-tit">Título / Curso</label>
                 <input type="text" id="f-edu2-tit" class="form-input" placeholder="Ej: Excel Avanzado, Primeros Auxilios...">
               </div>
               <div class="form-group">
@@ -1806,11 +1805,14 @@
 
       window.print();
 
+      // EL BUG DEL PDF EN BLANCO: 
+      // En móviles el proceso de impresión es asíncrono. Si borramos el contenido muy rápido (1.2s),
+      // el motor de impresión captura una página vacía. Aumentamos a 10s para dar margen total.
       setTimeout(() => {
         document.getElementById('ps-override')?.remove();
         pt.style.display = 'none';
         pt.innerHTML = '';
-      }, 1200);
+      }, 10000);
     }
 
     /* ================================================
