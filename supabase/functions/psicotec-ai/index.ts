@@ -63,7 +63,22 @@ serve(async (req) => {
     })
 
     const data = await response.json()
-    const improvedText = data.choices[0].message.content.trim().replace(/^"|"$/g, '')
+
+    if (!response.ok) {
+      console.error("Error de Groq:", data)
+      return new Response(JSON.stringify({ 
+        error: `Error de la IA (${response.status}): ${data.error?.message || 'Error desconocido'}` 
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      })
+    }
+
+    const improvedText = data.choices?.[0]?.message?.content?.trim()?.replace(/^"|"$/g, '')
+    
+    if (!improvedText) {
+       throw new Error("La IA no devolvió ningún contenido válido.")
+    }
 
     return new Response(JSON.stringify({ improvedText }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
