@@ -1462,6 +1462,87 @@
     }
 
     /* ==============================================
+       CV TEMPLATE 6 — MODELO HARVARD (Académico)
+    ============================================== */
+    .cv-t6 {
+      max-width: 820px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 4rem 5rem;
+      box-shadow: var(--shadow-md);
+      font-family: 'Cormorant Garamond', serif;
+      color: #000;
+      line-height: 1.4;
+    }
+
+    .cv-t6 .cv-name {
+      font-size: 2rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      text-align: center;
+      margin-bottom: .2rem;
+      letter-spacing: .05em;
+    }
+
+    .cv-t6 .cv-ci {
+      text-align: center;
+      font-size: .9rem;
+      border-bottom: 1px solid #000;
+      padding-bottom: .8rem;
+      margin-bottom: 1.2rem;
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    .cv-t6 .sec-title {
+      font-size: .95rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      border-bottom: 1px solid #000;
+      margin: 1.6rem 0 .6rem;
+      padding-bottom: .1rem;
+      letter-spacing: .08em;
+    }
+
+    .cv-t6 .exp-item {
+      margin-bottom: .9rem;
+    }
+
+    .cv-t6 .exp-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      font-weight: 700;
+      font-size: 1rem;
+    }
+
+    .cv-t6 .exp-subhead {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      font-style: italic;
+      font-size: .93rem;
+      margin-bottom: .15rem;
+    }
+
+    .cv-t6 .exp-desc {
+      font-size: .9rem;
+      color: #111;
+      margin-left: 1.2rem;
+    }
+
+    .cv-t6 .exp-desc p { margin-bottom: .3rem; position: relative; }
+    .cv-t6 .exp-desc p::before { content: "•"; position: absolute; left: -1.2rem; }
+
+    .cv-t6 .edu-item {
+      margin-bottom: .6rem;
+    }
+
+    .cv-t6 .skill-tag {
+      font-family: 'DM Sans', sans-serif;
+      font-size: .88rem;
+    }
+
+    /* ==============================================
        COMPANIES SECTION
     ============================================== */
     .companies-layout {
@@ -2169,6 +2250,7 @@
           <button class="cv-sel-btn" id="sel-3" onclick="showTpl(3)">3 · Psicotec Premium ✨</button>
           <button class="cv-sel-btn" id="sel-4" onclick="showTpl(4)">4 · Minimalista</button>
           <button class="cv-sel-btn" id="sel-5" onclick="showTpl(5)">5 · Corporativo</button>
+          <button class="cv-sel-btn" id="sel-6" onclick="showTpl(6)">6 · Harvard Elite ✨</button>
         </div>
 
         <!-- Actions -->
@@ -2328,6 +2410,28 @@
                 <div id="t5-skills-s"></div>
               </div>
             </div>
+          </div>
+        </div>
+        
+        <!-- ---- TEMPLATE 6: HARVARD ---- -->
+        <div class="cv-wrap" id="cv-wrap-6">
+          <div class="cv-t6" id="cv-print-6">
+            <div class="cv-name" id="t6-name">Nombre Apellido</div>
+            <div class="cv-ci">
+              <span id="t6-email">email@ejemplo.com</span> | 
+              <span id="t6-tel">Teléfono</span> | 
+              <span id="t6-city">Ciudad, Provincia</span> |
+              <span id="t6-linkedin">linkedin.com/in/usuario</span>
+            </div>
+            
+            <div class="sec-title">Educación</div>
+            <div id="t6-edu"></div>
+            
+            <div class="sec-title">Experiencia Profesional</div>
+            <div id="t6-exp"></div>
+            
+            <div class="sec-title">Habilidades y Otros</div>
+            <div id="t6-skills" style="font-size:.9rem;"></div>
           </div>
         </div>
 
@@ -2774,10 +2878,15 @@
       return rows.length ? rows.join('') : '<p style="color:#aaa;font-size:.82rem;">Sin experiencia laboral registrada.</p>';
     }
 
-    function eduHTML(d) {
+    function eduHTML(d, isHarvard = false) {
       let h = '';
-      if (d.edu1tit) h += `<p style="margin-bottom:.6rem;"><strong>${d.edu1tit}</strong>${d.edu1niv ? ' · ' + d.edu1niv : ''}<br>${d.edu1inst || ''}${d.edu1anio ? ' · ' + d.edu1anio : ''}</p>`;
-      if (d.edu2tit) h += `<p><strong>${d.edu2tit}</strong><br>${d.edu2inst || ''}${d.edu2anio ? ' · ' + d.edu2anio : ''}</p>`;
+      if (isHarvard) {
+        if (d.edu1tit) h += `<div class="edu-item"><div class="exp-head"><span>${d.edu1inst || ''}</span><span>${d.edu1anio || ''}</span></div><div class="exp-subhead"><span>${d.edu1tit}${d.edu1niv ? ' · ' + d.edu1niv : ''}</span></div></div>`;
+        if (d.edu2tit) h += `<div class="edu-item"><div class="exp-head"><span>${d.edu2inst || ''}</span><span>${d.edu2anio || ''}</span></div><div class="exp-subhead"><span>${d.edu2tit}</span></div></div>`;
+      } else {
+        if (d.edu1tit) h += `<p style="margin-bottom:.6rem;"><strong>${d.edu1tit}</strong>${d.edu1niv ? ' · ' + d.edu1niv : ''}<br>${d.edu1inst || ''}${d.edu1anio ? ' · ' + d.edu1anio : ''}</p>`;
+        if (d.edu2tit) h += `<p><strong>${d.edu2tit}</strong><br>${d.edu2inst || ''}${d.edu2anio ? ' · ' + d.edu2anio : ''}</p>`;
+      }
       return h || '—';
     }
 
@@ -2833,6 +2942,22 @@
       html('t5-exp', exp); html('t5-edu', edu);
       html('t5-skills-h', skillList(d.skillsh).map(s => `<span class="cv-t5-skill-tag">${s}</span>`).join(''));
       html('t5-skills-s', skillList(d.skillss).map(s => `<span class="cv-t5-skill-tag">${s}</span>`).join(''));
+
+      /* T6 — Harvard */
+      set('t6-name', name);
+      set('t6-email', d.email); set('t6-tel', d.tel); set('t6-city', city);
+      set('t6-linkedin', d.linkedin?.replace('https://','').replace('www.','') || 'linkedin.com');
+      
+      const harvardExp = (d.experiencias || []).map(e => `
+        <div class="exp-item">
+          <div class="exp-head"><span>${e.emp}</span><span>${e.desde} – ${e.hasta}</span></div>
+          <div class="exp-subhead"><span>${e.cargo || ''}</span></div>
+          <div class="exp-desc">${(e.desc || '').split('\n').map(line => `<p>${line.trim()}</p>`).join('')}</div>
+        </div>`).join('');
+      
+      html('t6-exp', harvardExp || '<p>—</p>');
+      html('t6-edu', eduHTML(d, true));
+      html('t6-skills', `<strong>Habilidades:</strong> ${allSkills.join(', ')}`);
 
       // AVATAR / PHOTO INJECTION
       document.querySelectorAll('.cv-t2-ava, .cv-t3-ava').forEach(el => {
@@ -2935,7 +3060,7 @@
     ================================================ */
     function printAll() {
       let combined = '';
-      for (let i = 1; i <= 5; i++) {
+      for (let i = 1; i <= 6; i++) {
         const el = document.getElementById(`cv-print-${i}`);
         combined += `<div style="page-break-after:always;">${el.outerHTML}</div>`;
       }
@@ -3011,6 +3136,9 @@
           .cv-t3-body { grid-template-columns: 1fr 1fr !important; flex: 1 !important; }
           .cv-t4-two { grid-template-columns: 1fr 1fr !important; }
           .cv-t5-body { grid-template-columns: 1fr 1fr !important; }
+          .cv-t6 { padding: 2cm !important; border: none !important; }
+          .cv-t6 .exp-head, .cv-t6 .exp-subhead { font-size: 11pt !important; }
+          .cv-t6 .exp-desc { font-size: 10pt !important; }
           @page { size: A4 portrait; margin: 0; }
         }`;
       document.head.appendChild(styleTag);
