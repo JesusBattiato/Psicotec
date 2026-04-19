@@ -296,6 +296,14 @@
     <div class="detail-panel" style="max-width: 800px; padding:0; background:#FAF8F5;">
       <button class="detail-close" onclick="closeTerna()" style="color:#2C2416; background:rgba(0,0,0,.05); right: -45px; top: 0;">×</button>
       
+      <div id="terna-tpl-picker" class="no-print" style="background:#2C2416; padding:0.5rem 1rem; display:flex; justify-content:center; gap:1rem; border-radius: 8px 8px 0 0; border-bottom: 1px solid #444;">
+          <span style="color:var(--gold); font-size:0.7rem; font-weight:700; text-transform:uppercase; display:flex; align-items:center;">Diseño del Reporte:</span>
+          <select id="sel-terna-tpl" onchange="openTerna()" style="background:transparent; border:1px solid var(--gold); color:#fff; font-size:0.75rem; padding:0.2rem 0.5rem; border-radius:4px; font-family:var(--font-sans); cursor:pointer;">
+              <option value="psicotec" style="background:#222;">Psicotec Premium (Default)</option>
+              <option value="harvard" style="background:#222;">Harvard Academic (Blind)</option>
+          </select>
+      </div>
+      
       <div id="terna-content" style="padding: 3.5rem; color:#2C2416; background:#FAF8F5;">
          <!-- Contenido generado por JS -->
       </div>
@@ -549,69 +557,135 @@
       document.body.classList.add('printing-terna');
       
       const ternaList = ALl_CANDIDATES.filter(c => SELECTED_TERNA.has(c.id));
+      const tpl = document.getElementById('sel-terna-tpl').value;
+      const isHarvard = (tpl === 'harvard');
       
-      let html = `
-        <div style="border-bottom:2px solid var(--gold); padding-bottom:1rem; margin-bottom:2.5rem; display:flex; justify-content:space-between; align-items:flex-end;">
-          <div>
-            <h1 style="font-family:var(--font-serif); font-size:2rem; color:var(--brown); margin:0; line-height:1;">PSICOTEC</h1>
-            <div style="font-size:.75rem; letter-spacing:.15em; text-transform:uppercase; color:var(--gold-dark); margin-top:.25rem;">Reporte pre-selección B2B</div>
+      let html = '';
+      
+      if (isHarvard) {
+        // ---- HARVARD STYLE (Blind) ----
+        html = `
+          <div style="border-bottom:1.5px solid #000; padding: 1rem 0 2rem; margin-bottom:0; text-align:center;">
+             <h1 style="font-family:var(--font-serif); font-size:1.8rem; color:#000; margin:0; text-transform:uppercase; letter-spacing:0.1em;">PSICOTEC</h1>
+             <div style="font-size:0.8rem; font-weight:600; border-top:1px solid #000; display:inline-block; padding-top:0.4rem; margin-top:0.4rem; text-transform:uppercase; letter-spacing:0.15em;">Reporte de Terna Profesional (B2B)</div>
+             <p style="font-size:.75rem; color:#555; margin-top:0.8rem; text-transform:uppercase;">Lic. Noelia Yair Maza - MP. 149</p>
           </div>
-          <div style="font-size:.8rem; color:var(--gray); text-align:right;">
-            Confidencial<br>
-            Lic. Noelia Yair Maza - MP. 149
-          </div>
-        </div>
-      `;
+        `;
 
-      ternaList.forEach((c, idx) => {
-        const initial = c.apellido ? c.apellido.charAt(0) + '.' : '';
-        const blindName = `${c.nombre||'Candidato'} ${initial}`.trim();
-        const city = [c.ciudad, c.provincia].filter(Boolean).join(', ');
-        
-        const expBlock = (emp, cargo, desde, hasta) => emp ? `
-          <div style="margin-bottom:.75rem;">
-            <div style="font-weight:600; font-size:.9rem; color:var(--brown);">${cargo||'Cargo no especificado'}</div>
-            <div style="font-size:.8rem; color:var(--brown-mid);">${emp} · ${[desde,hasta].filter(Boolean).join(' – ')}</div>
-          </div>` : '';
+        ternaList.forEach((c, idx) => {
+          const initial = c.apellido ? c.apellido.charAt(0) + '.' : '';
+          const blindName = `${c.nombre||'Candidato'} ${initial}`.trim();
+          const city = [c.ciudad, c.provincia].filter(Boolean).join(', ');
+          
+          let expHtml = '';
+          const exps = typeof c.experiencias === 'string' ? JSON.parse(c.experiencias || '[]') : (c.experiencias || []);
+          if(exps.length > 0) {
+            exps.forEach(e => {
+              if(!e.emp) return;
+              expHtml += `
+                <div style="margin-bottom:1rem;">
+                  <div style="display:flex; justify-content:space-between; font-weight:700; font-size:1rem; color:#000;"><span>${e.emp}</span><span>${e.desde} – ${e.hasta}</span></div>
+                  <div style="display:flex; justify-content:space-between; font-style:italic; font-size:0.9rem; color:#444;"><span>${e.cargo||'Posición no especificada'}</span></div>
+                  <div style="font-size:0.9rem; margin-top:0.25rem; margin-left:1.1rem; color:#111;">
+                    ${(e.desc || '').split('\n').map(line => `<p style="position:relative; margin-bottom:0.2rem;">${line.trim()}</p>`).join('')}
+                  </div>
+                </div>`;
+            });
+          } else {
+             expHtml = '<div style="font-size:.9rem; color:#888;">Trayectoria no detallada.</div>';
+          }
 
-        html += `
-          <div style="margin-bottom:2.5rem; padding-bottom:1.5rem; border-bottom:1px dashed rgba(201,168,76,.3); page-break-inside: avoid;">
-            <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:.5rem;">
-              <h2 style="font-family:var(--font-serif); font-size:1.6rem; margin:0; color:var(--brown);">${blindName}</h2>
-              <span style="font-size:.75rem; background:rgba(201,168,76,.12); color:var(--gold-dark); padding:.3rem .8rem; border-radius:20px; font-weight:600; letter-spacing:.05em; text-transform:uppercase;">${c.puesto||c.titulo||'Perfil Técnico'}</span>
-            </div>
-            
-            <div style="margin-bottom:1.5rem; font-size:.8rem; color:var(--brown-mid); display:flex; gap:1.5rem;">
-              <span>📍 **Zona:** ${city||'S/E'}</span>
-              <span>⏱ **Disponibilidad:** ${c.modalidad||'S/E'}</span>
-            </div>
+          html += `
+            <div style="padding: 2.5rem 0; border-bottom: ${idx === ternaList.length - 1 ? 'none' : '1.5px solid #000'}; font-family:var(--font-serif); page-break-inside: avoid;">
+              <h2 style="text-transform:uppercase; font-size:1.5rem; letter-spacing:0.05em; border-bottom:1px solid #eee; padding-bottom:0.3rem; margin-bottom:0.5rem; color:#000;">${blindName}</h2>
+              <div style="margin: 0.5rem 0 1.5rem; font-family:var(--font-sans); font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; color:#555;">${c.puesto||c.titulo||'Perfil Técnico'} | 📍 ${city||'S/E'} ${c.modalidad?' | '+c.modalidad:''}</div>
+              
+              ${c.resumen ? `<div style="border-left:2px solid #000; padding:0.2rem 1rem; color:#222; font-size:0.95rem; margin-bottom:2rem; font-style:italic;">"${c.resumen}"</div>` : ''}
 
-            ${c.resumen ? `<div style="font-size:.9rem; color:#444; line-height:1.6; margin-bottom:1.5rem; padding-left:1rem; border-left:2px solid var(--gold-light);"><em>"${c.resumen}"</em></div>` : ''}
+              <div style="color:#000; border-bottom:1px solid #000; font-size:0.85rem; font-weight:700; margin-bottom:0.75rem; text-transform:uppercase;">Trayectoria Profesional</div>
+              ${expHtml}
 
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:2rem;">
-              <!-- Columna 1 -->
-              <div>
-                <h3 style="font-size:.75rem; text-transform:uppercase; color:var(--gold-dark); letter-spacing:.1em; margin-bottom:1rem; border-bottom:1px solid rgba(201,168,76,.3); padding-bottom:.3rem;">Trayectoria Profesional</h3>
-                ${(typeof c.experiencias === 'string' ? JSON.parse(c.experiencias || '[]') : (c.experiencias || [])).map(e => expBlock(e.emp, e.cargo, e.desde, e.hasta)).join('') || '<div style="font-size:.8rem; color:var(--gray);">Trayectoria no detallada.</div>'}
-              </div>
-
-              <!-- Columna 2 -->
-              <div>
-                <h3 style="font-size:.75rem; text-transform:uppercase; color:var(--gold-dark); letter-spacing:.1em; margin-bottom:1rem; border-bottom:1px solid rgba(201,168,76,.3); padding-bottom:.3rem;">Educación & Skills</h3>
-                
-                <div style="margin-bottom:1.25rem;">
-                  ${c.edu1tit?`<div style="font-weight:600; font-size:.85rem; color:var(--brown);">${c.edu1tit}</div><div style="font-size:.8rem; color:var(--brown-mid);">${c.edu1inst||''}</div>`:''}
-                  ${c.edu2tit?`<div style="font-weight:600; font-size:.85rem; color:var(--brown); margin-top:.5rem;">${c.edu2tit}</div><div style="font-size:.8rem; color:var(--brown-mid);">${c.edu2inst||''}</div>`:''}
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:2.5rem; margin-top:1.5rem;">
+                <div>
+                  <div style="color:#000; border-bottom:1px solid #000; font-size:0.85rem; font-weight:700; margin-bottom:0.75rem; text-transform:uppercase;">Educación</div>
+                  ${c.edu1tit?`<div style="font-weight:700; font-size:.95rem;">${c.edu1inst||''}</div><div style="font-style:italic; font-size:.9rem; margin-bottom:.5rem;">${c.edu1tit} · ${c.edu1anio||''}</div>`:''}
+                  ${c.edu2tit?`<div style="font-weight:700; font-size:.95rem;">${c.edu2inst||''}</div><div style="font-style:italic; font-size:.9rem;">${c.edu2tit} · ${c.edu2anio||''}</div>`:''}
                 </div>
-
-                ${c.skillsh?`<div style="font-size:.82rem; margin-bottom:.4rem; color:#444;"><strong style="color:var(--brown);">Técnicas:</strong> ${c.skillsh}</div>`:''}
-                ${c.skillss?`<div style="font-size:.82rem; margin-bottom:.4rem; color:#444;"><strong style="color:var(--brown);">Blandas:</strong> ${c.skillss}</div>`:''}
-                ${c.idiomas?`<div style="font-size:.82rem; color:#444;"><strong style="color:var(--brown);">Idiomas:</strong> ${c.idiomas}</div>`:''}
+                <div>
+                  <div style="color:#000; border-bottom:1px solid #000; font-size:0.85rem; font-weight:700; margin-bottom:0.75rem; text-transform:uppercase;">Habilidades & Otros</div>
+                  <div style="font-size:.9rem;">
+                    ${c.skillsh?`<div><strong>Técnicas:</strong> ${c.skillsh}</div>`:''}
+                    ${c.skillss?`<div><strong>Blandas:</strong> ${c.skillss}</div>`:''}
+                    ${c.idiomas?`<div><strong>Idiomas:</strong> ${c.idiomas}</div>`:''}
+                  </div>
+                </div>
               </div>
+            </div>
+          `;
+        });
+      } else {
+        // ---- ORIGINAL PSICOTEC PREMIUM STYLE ----
+        html = `
+          <div style="border-bottom:2px solid var(--gold); padding-bottom:1rem; margin-bottom:2.5rem; display:flex; justify-content:space-between; align-items:flex-end;">
+            <div>
+              <h1 style="font-family:var(--font-serif); font-size:2rem; color:var(--brown); margin:0; line-height:1;">PSICOTEC</h1>
+              <div style="font-size:.75rem; letter-spacing:.15em; text-transform:uppercase; color:var(--gold-dark); margin-top:.25rem;">Reporte pre-selección B2B</div>
+            </div>
+            <div style="font-size:.8rem; color:var(--gray); text-align:right;">
+              Confidencial<br>
+              Lic. Noelia Yair Maza - MP. 149
             </div>
           </div>
         `;
-      });
+
+        ternaList.forEach((c, idx) => {
+          const initial = c.apellido ? c.apellido.charAt(0) + '.' : '';
+          const blindName = `${c.nombre||'Candidato'} ${initial}`.trim();
+          const city = [c.ciudad, c.provincia].filter(Boolean).join(', ');
+          
+          const expBlock = (emp, cargo, desde, hasta) => emp ? `
+            <div style="margin-bottom:.75rem;">
+              <div style="font-weight:600; font-size:.9rem; color:var(--brown);">${cargo||'Cargo no especificado'}</div>
+              <div style="font-size:.8rem; color:var(--brown-mid);">${emp} · ${[desde,hasta].filter(Boolean).join(' – ')}</div>
+            </div>` : '';
+
+          html += `
+            <div style="margin-bottom:2.5rem; padding-bottom:1.5rem; border-bottom:1px dashed rgba(201,168,76,.3); page-break-inside: avoid;">
+              <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:.5rem;">
+                <h2 style="font-family:var(--font-serif); font-size:1.6rem; margin:0; color:var(--brown);">${blindName}</h2>
+                <span style="font-size:.75rem; background:rgba(201,168,76,.12); color:var(--gold-dark); padding:.3rem .8rem; border-radius:20px; font-weight:600; letter-spacing:.05em; text-transform:uppercase;">${c.puesto||c.titulo||'Perfil Técnico'}</span>
+              </div>
+              
+              <div style="margin-bottom:1.5rem; font-size:.8rem; color:var(--brown-mid); display:flex; gap:1.5rem;">
+                <span>📍 **Zona:** ${city||'S/E'}</span>
+                 <span>⏱ **Disponibilidad:** ${c.modalidad||'S/E'}</span>
+              </div>
+
+              ${c.resumen ? `<div style="font-size:.9rem; color:#444; line-height:1.6; margin-bottom:1.5rem; padding-left:1rem; border-left:2px solid var(--gold-light);"><em>"${c.resumen}"</em></div>` : ''}
+
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:2rem;">
+                <div>
+                  <h3 style="font-size:.75rem; text-transform:uppercase; color:var(--gold-dark); letter-spacing:.1em; margin-bottom:1rem; border-bottom:1px solid rgba(201,168,76,.3); padding-bottom:.3rem;">Trayectoria Profesional</h3>
+                  ${(typeof c.experiencias === 'string' ? JSON.parse(c.experiencias || '[]') : (c.experiencias || [])).slice(0,3).map(e => expBlock(e.emp, e.cargo, e.desde, e.hasta)).join('') || '<div style="font-size:.8rem; color:var(--gray);">Trayectoria no detallada.</div>'}
+                </div>
+                <div>
+                  <h3 style="font-size:.75rem; text-transform:uppercase; color:var(--gold-dark); letter-spacing:.1em; margin-bottom:1rem; border-bottom:1px solid rgba(201,168,76,.3); padding-bottom:.3rem;">Educación & Skills</h3>
+                  <div style="margin-bottom:1.25rem;">
+                    ${c.edu1tit?`<div style="font-weight:600; font-size:.85rem; color:var(--brown);">${c.edu1tit}</div><div style="font-size:.8rem; color:var(--brown-mid);">${c.edu1inst||''}</div>`:''}
+                    ${c.edu2tit?`<div style="font-weight:600; font-size:.85rem; color:var(--brown); margin-top:.5rem;">${c.edu2tit}</div><div style="font-size:.8rem; color:var(--brown-mid);">${c.edu2inst||''}</div>`:''}
+                  </div>
+                  ${c.skillsh?`<div style="font-size:.82rem; margin-bottom:.4rem; color:#444;"><strong style="color:var(--brown);">Técnicas:</strong> ${c.skillsh}</div>`:''}
+                  ${c.skillss?`<div style="font-size:.82rem; margin-bottom:.4rem; color:#444;"><strong style="color:var(--brown);">Blandas:</strong> ${c.skillss}</div>`:''}
+                </div>
+              </div>
+            </div>
+          `;
+        });
+      }
+
+      document.getElementById('terna-content').innerHTML = html;
+      document.getElementById('terna-overlay').style.display = 'flex';
+    }
 
       document.getElementById('terna-content').innerHTML = html;
       document.getElementById('terna-overlay').classList.add('open');
@@ -625,7 +699,8 @@
     function copyTernaLink() {
       if (SELECTED_TERNA.size === 0) return;
       const ids = Array.from(SELECTED_TERNA).join(',');
-      const url = window.location.origin + window.location.pathname.replace('admin.html', '') + 'terna.html?c=' + ids;
+      const tpl = document.getElementById('sel-terna-tpl').value;
+      const url = window.location.origin + window.location.pathname.replace('admin.html', '') + 'terna.html?c=' + ids + '&t=' + tpl;
       
       navigator.clipboard.writeText(url).then(() => {
          const btn = document.getElementById('btn-copy-terna');
@@ -638,7 +713,8 @@
     function shareTernaWA() {
       if (SELECTED_TERNA.size === 0) return;
       const ids = Array.from(SELECTED_TERNA).join(',');
-      const url = window.location.origin + window.location.pathname.replace('admin.html', '') + 'terna.html?c=' + ids;
+      const tpl = document.getElementById('sel-terna-tpl').value;
+      const url = window.location.origin + window.location.pathname.replace('admin.html', '') + 'terna.html?c=' + ids + '&t=' + tpl;
       const text = encodeURIComponent(`Hola, te comparto la terna de candidatos de Psicotec: ${url}`);
       window.open(`https://wa.me/?text=${text}`, '_blank');
     }

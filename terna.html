@@ -53,6 +53,26 @@
       @page { size: A4; margin: 1cm; }
     }
     @media (max-width: 600px) { .two-cols { grid-template-columns:1fr; gap:1.5rem; } .c-head{flex-direction:column; gap:.5rem;} }
+
+    /* Harvard Mode Styles */
+    body.harvard-mode { font-family: var(--font-serif); }
+    .harvard-mode .container { max-width: 850px; }
+    .harvard-mode .header { border-bottom: 1.5px solid #000; padding: 1rem 0 2rem; }
+    .harvard-mode .header h1 { text-transform: uppercase; letter-spacing: 0.1em; font-size: 1.8rem; }
+    .harvard-mode .header .sub { color: #000; font-weight: 600; border-top: 1px solid #000; display: inline-block; padding-top: 0.4rem; margin-top: 0.4rem; }
+    .harvard-mode .card { border: none; border-bottom: 1px solid #000; border-radius: 0; box-shadow: none; padding: 2rem 0; margin-bottom: 0; }
+    .harvard-mode .card:last-of-type { border-bottom: none; }
+    .harvard-mode .c-name { text-transform: uppercase; font-size: 1.5rem; letter-spacing: 0.05em; border-bottom: 1px solid #eee; padding-bottom: 0.3rem; margin-bottom: 0.5rem; }
+    .harvard-mode .c-badge { background: #eee; color: #000; border-radius: 0; font-size: 0.65rem; }
+    .harvard-mode .c-meta { margin: 0.5rem 0 1.5rem; font-family: var(--font-sans); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: #555; }
+    .harvard-mode .sec-t { color: #000; border-bottom: 1px solid #000; font-size: 0.85rem; font-weight: 700; margin-bottom: 0.75rem; }
+    .harvard-mode .c-resumen { background: transparent; border: none; border-left: 2px solid #000; padding: 0.2rem 1rem; color: #222; font-size: 0.95rem; margin-bottom: 2rem; }
+    .harvard-mode .exp-item-h { margin-bottom: 1rem; }
+    .harvard-mode .exp-h-head { display: flex; justify-content: space-between; font-weight: 700; font-size: 1rem; }
+    .harvard-mode .exp-h-sub { display: flex; justify-content: space-between; font-style: italic; font-size: 0.9rem; color: #444; }
+    .harvard-mode .exp-h-desc { font-size: 0.9rem; margin-top: 0.25rem; margin-left: 1.1rem; }
+    .harvard-mode .exp-h-desc p { position: relative; margin-bottom: 0.2rem; }
+    .harvard-mode .exp-h-desc p::before { content: "•"; position: absolute; left: -1.1rem; }
   </style>
 </head>
 <body>
@@ -62,7 +82,7 @@
       <h1>PSICOTEC</h1>
       <div class="sub">Reporte de Terna Profesional (B2B)</div>
       <p style="font-size:.85rem; color:var(--gray); margin-top:1rem;">Lic. Noelia Yair Maza - MP. 149</p>
-      <button onclick="window.print()" style="margin-top:1.5rem; padding:.5rem 1.5rem; background:var(--gold-dark); color:#fff; border:none; border-radius:4px; font-weight:600; cursor:pointer;">🖨 Guardar/Imprimir PDF</button>
+      <button onclick="window.print()" style="margin-top:1.5rem; padding:.5rem 1.5rem; background:var(--gold-dark); color:#fff; border:none; border-radius:4px; font-weight:600; cursor:pointer;" class="no-print">🖨 Guardar/Imprimir PDF</button>
     </div>
 
     <div id="content" class="loader">⏳ Descargando perfiles...</div>
@@ -72,8 +92,13 @@
     async function loadData() {
       const urlParams = new URLSearchParams(window.location.search);
       const idsParam = urlParams.get('c');
+      const tplParam = urlParams.get('t'); // 'psicotec' o 'harvard'
       const content = document.getElementById('content');
       
+      if (tplParam === 'harvard') {
+        document.body.classList.add('harvard-mode');
+      }
+
       if (!idsParam) {
         content.innerHTML = '⚠ Enlace inválido. No se detectaron perfiles designados.';
         return;
@@ -101,51 +126,98 @@
           
           let expHtml = '';
           const exps = typeof c.experiencias === 'string' ? JSON.parse(c.experiencias || '[]') : (c.experiencias || []);
-          if(exps.length > 0) {
-            exps.forEach(e => {
-              if(!e.emp) return;
-              expHtml += `
-                <div style="margin-bottom:1rem;">
-                  <div style="font-weight:600; font-size:.9rem; color:var(--brown);">${e.cargo||'Posición no especificada'}</div>
-                  <div style="font-size:.85rem; color:var(--brown-mid);">${e.emp} · ${[e.desde,e.hasta].filter(Boolean).join(' – ')}</div>
-                </div>`;
-            });
-          } else {
-             expHtml = '<div style="font-size:.85rem; color:var(--gray);">Trayectoria no detallada en plataforma.</div>';
-          }
+          
+          if (tplParam === 'harvard') {
+             // Harvard Experience Block
+             if(exps.length > 0) {
+                exps.forEach(e => {
+                  if(!e.emp) return;
+                  expHtml += `
+                    <div class="exp-item-h">
+                      <div class="exp-h-head"><span>${e.emp}</span><span>${e.desde} – ${e.hasta}</span></div>
+                      <div class="exp-h-sub"><span>${e.cargo||'Posición no especificada'}</span></div>
+                      <div class="exp-h-desc">${(e.desc || '').split('\n').map(line => `<p>${line.trim()}</p>`).join('')}</div>
+                    </div>`;
+                });
+              } else {
+                 expHtml = '<div style="font-size:.9rem; color:#888;">Trayectoria no detallada.</div>';
+              }
 
-          html += `
-            <div class="card">
-              <div class="c-head">
-                <h2 class="c-name">${blindName}</h2>
-                <span class="c-badge">${c.puesto||c.titulo||'Perfil Técnico'}</span>
-              </div>
-              
-              <div class="c-meta">
-                <span>📍 ${city||'S/E'}</span>
-                 ${c.modalidad ? `<span>⏱ ${c.modalidad}</span>` : ''}
-              </div>
+              html += `
+                <div class="card">
+                  <h2 class="c-name">${blindName}</h2>
+                  <div class="c-meta">${c.puesto||c.titulo||'Perfil Técnico'} | 📍 ${city||'S/E'} ${c.modalidad?' | '+c.modalidad:''}</div>
+                  
+                  ${c.resumen ? `<div class="c-resumen">"${c.resumen}"</div>` : ''}
 
-              ${c.resumen ? `<div class="c-resumen">"${c.resumen}"</div>` : ''}
-
-              <div class="two-cols">
-                <div>
-                  <div class="sec-t">Trayectoria Operativa</div>
+                  <div class="sec-t">Trayectoria Profesional</div>
                   ${expHtml}
-                </div>
-                <div>
-                  <div class="sec-t">Educación & Skills</div>
-                  <div style="margin-bottom:1.5rem;">
-                    ${c.edu1tit?`<div style="font-weight:600; font-size:.85rem; color:var(--brown);">${c.edu1tit}</div><div style="font-size:.8rem; color:var(--brown-mid);">${c.edu1inst||''}</div>`:''}
-                    ${c.edu2tit?`<div style="font-weight:600; font-size:.85rem; color:var(--brown); margin-top:.5rem;">${c.edu2tit}</div><div style="font-size:.8rem; color:var(--brown-mid);">${c.edu2inst||''}</div>`:''}
+
+                  <div class="two-cols" style="margin-top:1.5rem;">
+                    <div>
+                      <div class="sec-t">Educación</div>
+                      ${c.edu1tit?`<div style="font-weight:700; font-size:.95rem;">${c.edu1inst||''}</div><div style="font-style:italic; font-size:.9rem; margin-bottom:.5rem;">${c.edu1tit} · ${c.edu1anio||''}</div>`:''}
+                      ${c.edu2tit?`<div style="font-weight:700; font-size:.95rem;">${c.edu2inst||''}</div><div style="font-style:italic; font-size:.9rem;">${c.edu2tit} · ${c.edu2anio||''}</div>`:''}
+                    </div>
+                    <div>
+                      <div class="sec-t">Habilidades & Otros</div>
+                      <div style="font-size:.9rem;">
+                        ${c.skillsh?`<div><strong>Técnicas:</strong> ${c.skillsh}</div>`:''}
+                        ${c.skillss?`<div><strong>Blandas:</strong> ${c.skillss}</div>`:''}
+                        ${c.idiomas?`<div><strong>Idiomas:</strong> ${c.idiomas}</div>`:''}
+                      </div>
+                    </div>
                   </div>
-                  ${c.skillsh?`<div style="font-size:.82rem; margin-bottom:.4rem; color:#444;"><strong style="color:var(--brown);">Técnicas:</strong> ${c.skillsh}</div>`:''}
-                  ${c.skillss?`<div style="font-size:.82rem; margin-bottom:.4rem; color:#444;"><strong style="color:var(--brown);">Blandas:</strong> ${c.skillss}</div>`:''}
-                  ${c.idiomas?`<div style="font-size:.82rem; color:#444;"><strong style="color:var(--brown);">Idiomas:</strong> ${c.idiomas}</div>`:''}
                 </div>
-              </div>
-            </div>
-          `;
+              `;
+          } else {
+              // Classic Psicotec Style
+              if(exps.length > 0) {
+                exps.forEach(e => {
+                  if(!e.emp) return;
+                  expHtml += `
+                    <div style="margin-bottom:1rem;">
+                      <div style="font-weight:600; font-size:.9rem; color:var(--brown);">${e.cargo||'Posición no especificada'}</div>
+                      <div style="font-size:.85rem; color:var(--brown-mid);">${e.emp} · ${[e.desde,e.hasta].filter(Boolean).join(' – ')}</div>
+                    </div>`;
+                });
+              } else {
+                 expHtml = '<div style="font-size:.85rem; color:var(--gray);">Trayectoria no detallada en plataforma.</div>';
+              }
+
+              html += `
+                <div class="card">
+                  <div class="c-head">
+                    <h2 class="c-name">${blindName}</h2>
+                    <span class="c-badge">${c.puesto||c.titulo||'Perfil Técnico'}</span>
+                  </div>
+                  
+                  <div class="c-meta">
+                    <span>📍 ${city||'S/E'}</span>
+                     ${c.modalidad ? `<span>⏱ ${c.modalidad}</span>` : ''}
+                  </div>
+    
+                  ${c.resumen ? `<div class="c-resumen">"${c.resumen}"</div>` : ''}
+    
+                  <div class="two-cols">
+                    <div>
+                      <div class="sec-t">Trayectoria Operativa</div>
+                      ${expHtml}
+                    </div>
+                    <div>
+                      <div class="sec-t">Educación & Skills</div>
+                      <div style="margin-bottom:1.5rem;">
+                        ${c.edu1tit?`<div style="font-weight:600; font-size:.85rem; color:var(--brown);">${c.edu1tit}</div><div style="font-size:.8rem; color:var(--brown-mid);">${c.edu1inst||''}</div>`:''}
+                        ${c.edu2tit?`<div style="font-weight:600; font-size:.85rem; color:var(--brown); margin-top:.5rem;">${c.edu2tit}</div><div style="font-size:.8rem; color:var(--brown-mid);">${c.edu2inst||''}</div>`:''}
+                      </div>
+                      ${c.skillsh?`<div style="font-size:.82rem; margin-bottom:.4rem; color:#444;"><strong style="color:var(--brown);">Técnicas:</strong> ${c.skillsh}</div>`:''}
+                      ${c.skillss?`<div style="font-size:.82rem; margin-bottom:.4rem; color:#444;"><strong style="color:var(--brown);">Blandas:</strong> ${c.skillss}</div>`:''}
+                      ${c.idiomas?`<div style="font-size:.82rem; color:#444;"><strong style="color:var(--brown);">Idiomas:</strong> ${c.idiomas}</div>`:''}
+                    </div>
+                  </div>
+                </div>
+              `;
+          }
         });
         
         content.innerHTML = html;
