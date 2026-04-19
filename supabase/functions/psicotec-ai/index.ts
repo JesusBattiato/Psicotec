@@ -35,15 +35,19 @@ serve(async (req) => {
 
     const systemPrompt = `Eres un experto en Selección de Personal y Redacción Curricular de la consultora Psicotec. 
     Tu tarea es profesionalizar el texto de un candidato para su CV. 
-    - Usa un lenguaje ejecutivo, elegante y directo. 
-    - Enfócate en verbos de acción y logros.
-    - Mantén una extensión similar al original pero mejora la calidad.
     - Idioma: Español (Argentina/Latinoamérica).
     - IMPORTANTE: Devuelve SOLO el texto mejorado, sin introducciones ni comentarios adicionales.`
 
-    const userPrompt = field === 'resumen' 
-      ? `Mejora este resumen profesional de CV: "${text}"`
-      : `Profesionaliza esta descripción de tareas laborales: "${text}"`;
+    let userPrompt = "";
+    if (field === 'resumen') {
+      userPrompt = `Mejora este resumen profesional de CV, usando un lenguaje ejecutivo y logros: "${text}"`;
+    } else if (field === 'skills') {
+      userPrompt = `Identifica las habilidades profesionales (técnicas o blandas) en este texto: "${text}". 
+      Devuelve SOLO una lista de palabras clave o frases cortas separadas por COMAS. 
+      No escribas oraciones largas ni introducciones. Máximo 15 habilidades.`;
+    } else {
+      userPrompt = `Profesionaliza esta descripción de tareas laborales, enfocándote en verbos de acción: "${text}"`;
+    }
 
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
