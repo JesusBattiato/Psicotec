@@ -1297,39 +1297,67 @@
       if (!emailInput || !emailInput.includes('@')) {
          alert('Por favor ingresá un email válido.'); return;
       }
-      
+
       const btn = document.getElementById('btn-gate-check');
       const origText = btn.innerHTML;
       btn.innerHTML = 'Verificando...'; btn.disabled = true;
 
-      // 1. Buscamos si existe en candidates
-      const { data, error } = await supabase.from('candidates').select('*').eq('email', emailInput);
-      
-      if (error) {
-         console.error('Error al buscar candidato:', error);
-         alert('Hubo un error de red. Intenta nuevamente.');
-         btn.innerHTML = origText; btn.disabled = false;
-         return;
+      // Helper: query con timeout de 5 segundos
+      function queryWithTimeout(promise, ms) {
+        return Promise.race([
+          promise,
+          new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), ms))
+        ]);
       }
 
-      // 2. Si NO existe -> Avanzamos a crear currículum en limpio y ocultamos todo (modo Alta)
-      if (!data || data.length === 0) {
-         document.getElementById('f-email').value = emailInput;
-         document.querySelector('.form-stepper').style.display = 'flex';
-         goTo(1);
-         return;
+      try {
+        // 1. Buscamos si existe en candidates (con timeout)
+        const { data, error } = await queryWithTimeout(
+          supabase.from('candidates').select('id, email').eq('email', emailInput),
+          5000
+        );
+
+        if (error) throw error;
+
+        // 2. Si NO existe → Alta nueva
+        if (!data || data.length === 0) {
+          document.getElementById('f-email').value = emailInput;
+          document.querySelector('.form-stepper').style.display = 'flex';
+          btn.innerHTML = origText; btn.disabled = false;
+          goTo(1);
+          return;
+        }
+
+        // 3. SI EXISTE → Magic Link
+        btn.innerHTML = 'Enviando link...';
+        alert(`¡Qué bueno verte de nuevo! Encontramos tu perfil asociado a ${emailInput}.\n\nPara proteger tus datos, te hemos enviado un link directo a tu correo. Ábrelo para poder editar tu CV.`);
+
+        const res = await queryWithTimeout(
+          supabase.auth.signInWithOtp({
+            email: emailInput,
+            options: { emailRedirectTo: window.location.origin + window.location.pathname }
+          }),
+          8000
+        );
+
+        if (res.error) throw res.error;
+        btn.innerHTML = '📧 Mail enviado. Revisá tu buzón.';
+
+      } catch (err) {
+        console.warn('checkEmailGate error:', err);
+
+        // Si es timeout o error de red → dejamos pasar igual (baja fricción)
+        if (err.message === 'timeout' || err.message?.includes('network') || err.message?.includes('fetch')) {
+          document.getElementById('f-email').value = emailInput;
+          document.querySelector('.form-stepper').style.display = 'flex';
+          btn.innerHTML = origText; btn.disabled = false;
+          goTo(1);
+        } else {
+          // Error real (ej: email inválido en OTP)
+          btn.innerHTML = origText; btn.disabled = false;
+          alert('Hubo un problema de conexión. Intentá de nuevo.');
+        }
       }
-
-      // 3. SI EXISTE -> Disparamos OTP (Magic Link)
-      alert(`¡Qué bueno verte de nuevo! Encontramos tu perfil asociado a ${emailInput}.\n\nPara proteger tus datos, te hemos enviado un link directo a tu correo. Ábrelo para poder editar tu CV.`);
-      
-      const res = await supabase.auth.signInWithOtp({
-        email: emailInput,
-        options: { emailRedirectTo: window.location.origin + window.location.pathname }
-      });
-
-      if (res.error) console.error("OTP Error:", res.error);
-      btn.innerHTML = 'Mail enviado. Revisa tu buzón.';
     }
 
     // Al cargar la página, validar si viene del Magic Link
