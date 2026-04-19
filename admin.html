@@ -260,6 +260,14 @@
         <option value="univ_comp">Univ/Tert Completo</option>
       </select>
 
+      <select id="filter-age" class="filter-select" onchange="renderTable()">
+        <option value="all">🎂 Edad: Todas</option>
+        <option value="18-25">18 a 25 años</option>
+        <option value="26-35">26 a 35 años</option>
+        <option value="36-45">36 a 45 años</option>
+        <option value="46+">46 años o más</option>
+      </select>
+
       <select id="filter-consent" class="filter-select" onchange="renderTable()">
         <option value="all">Bolsa: Todas</option>
         <option value="yes">✓ Con consentimiento</option>
@@ -279,9 +287,10 @@
           <tr>
             <th>✓</th>
             <th>#</th>
-            <th>Nombre</th>
-            <th>Puesto buscado</th>
-            <th>Ciudad</th>
+            <th>Candidato</th>
+            <th>Edad</th>
+            <th>Puesto / Título</th>
+            <th>Zona</th>
             <th>Teléfono</th>
             <th>Email</th>
             <th>Bolsa</th>
@@ -335,6 +344,16 @@
   <script>
     let ALl_CANDIDATES = [];
     let SELECTED_TERNA = new Set();
+
+    const getAge = (birthDate) => {
+      if (!birthDate) return null;
+      const today = new Date();
+      const birth = new Date(birthDate);
+      let a = today.getFullYear() - birth.getFullYear();
+      const m = today.getMonth() - birth.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) a--;
+      return a;
+    };
 
     /* ====================================================
        AUTH
@@ -430,6 +449,7 @@
       const search  = document.getElementById('search-input').value.toLowerCase();
       const reloc   = document.getElementById('filter-reloc').value;
       const edu     = document.getElementById('filter-edu').value;
+      const age     = document.getElementById('filter-age').value;
       const consent = document.getElementById('filter-consent').value;
       const sort    = document.getElementById('filter-sort').value;
 
@@ -470,6 +490,19 @@
         });
       }
 
+      // 3b. AGE FILTER
+      if (age !== 'all') {
+        data = data.filter(c => {
+          const a = getAge(c.birth_date);
+          if (a === null) return false;
+          if (age === '18-25') return a >= 18 && a <= 25;
+          if (age === '26-35') return a >= 26 && a <= 35;
+          if (age === '36-45') return a >= 36 && a <= 45;
+          if (age === '46+')   return a >= 46;
+          return true;
+        });
+      }
+
       // 4. CONSENT FILTER
       if (consent === 'yes') data = data.filter(c => c.consent);
       if (consent === 'no')  data = data.filter(c => !c.consent);
@@ -497,10 +530,12 @@
           ? '<span class="badge-consent badge-yes">✓ Sí</span>'
           : '<span class="badge-consent badge-no">No</span>';
         const isChecked = SELECTED_TERNA.has(c.id) ? 'checked' : '';
+        const ageVal = getAge(c.birth_date) || '—';
         return `<tr>
           <td><input type="checkbox" onchange="toggleTerna('${c.id}')" ${isChecked}></td>
           <td style="color:var(--gray); font-size:.75rem;">${i+1}</td>
           <td class="name">${c.nombre||''} ${c.apellido||''}</td>
+          <td style="font-size:.85rem; color:var(--gold-light); font-weight:700;">${ageVal}</td>
           <td class="puesto">${c.puesto||c.titulo||'—'}</td>
           <td>${[c.ciudad,c.provincia].filter(Boolean).join(', ')||'—'}</td>
           <td><a href="tel:${c.tel}" style="color:#90CAF9;text-decoration:none;">${c.tel||'—'}</a></td>
@@ -542,6 +577,8 @@
           <div class="detail-sec-title">Datos de Contacto</div>
           ${row('Email',    c.email)}
           ${row('Teléfono', c.tel)}
+          ${row('Nacim.',   c.birth_date || 'Sin cargar')}
+          ${row('Edad',     getAge(c.birth_date) || '—')}
           ${row('Ciudad',   city)}
           ${row('LinkedIn', c.linkedin)}
           ${row('Modalidad',c.modalidad)}
@@ -618,8 +655,8 @@
       if (isHarvard) {
         // ---- HARVARD STYLE (Blind) ----
         html = `
-          <div style="border-bottom:1.5px solid #000; padding: 1rem 0 2rem; margin-bottom:0; text-align:center;">
-             <h1 style="font-family:var(--font-serif); font-size:1.8rem; color:#000; margin:0; text-transform:uppercase; letter-spacing:0.1em;">PSICOTEC</h1>
+          <div style="border-bottom:1.5px solid #000; padding: 1rem 0 2rem; margin-bottom:0; text-align:center; font-family:'Libre Baskerville', serif;">
+             <h1 style="font-size:1.8rem; color:#000; margin:0; text-transform:uppercase; letter-spacing:0.1em;">PSICOTEC</h1>
              <div style="font-size:0.8rem; font-weight:600; border-top:1px solid #000; display:inline-block; padding-top:0.4rem; margin-top:0.4rem; text-transform:uppercase; letter-spacing:0.15em;">Reporte de Terna Profesional (B2B)</div>
              <p style="font-size:.75rem; color:#555; margin-top:0.8rem; text-transform:uppercase;">Lic. Noelia Yair Maza - MP. 149</p>
           </div>
@@ -637,9 +674,9 @@
               if(!e.emp) return;
               expHtml += `
                 <div style="margin-bottom:1rem;">
-                  <div style="display:flex; justify-content:space-between; font-weight:700; font-size:1rem; color:#000;"><span>${e.emp}</span><span>${e.desde} – ${e.hasta}</span></div>
-                  <div style="display:flex; justify-content:space-between; font-style:italic; font-size:0.9rem; color:#444;"><span>${e.cargo||'Posición no especificada'}</span></div>
-                  <div style="font-size:0.9rem; margin-top:0.25rem; margin-left:1.1rem; color:#111;">
+                  <div style="display:flex; justify-content:space-between; font-weight:700; font-size:1.05rem; color:#000;"><span>${e.emp}</span><span>${e.desde} – ${e.hasta}</span></div>
+                  <div style="display:flex; justify-content:space-between; font-style:italic; font-size:0.95rem; color:#333;"><span>${e.cargo||'Posición no especificada'}</span></div>
+                  <div style="font-size:0.95rem; margin-top:0.25rem; margin-left:1.1rem; color:#111; line-height:1.6;">
                     ${(e.desc || '').split('\n').map(line => `<p style="position:relative; margin-bottom:0.2rem;">${line.trim()}</p>`).join('')}
                   </div>
                 </div>`;
@@ -649,11 +686,11 @@
           }
 
           html += `
-            <div style="padding: 2.5rem 0; border-bottom: ${idx === ternaList.length - 1 ? 'none' : '1.5px solid #000'}; font-family:var(--font-serif); page-break-inside: avoid;">
+            <div style="padding: 2.5rem 0; border-bottom: ${idx === ternaList.length - 1 ? 'none' : '1.5px solid #000'}; font-family:'Libre Baskerville', serif; page-break-inside: avoid;">
               <h2 style="text-transform:uppercase; font-size:1.5rem; letter-spacing:0.05em; border-bottom:1px solid #eee; padding-bottom:0.3rem; margin-bottom:0.5rem; color:#000;">${blindName}</h2>
-              <div style="margin: 0.5rem 0 1.5rem; font-family:var(--font-sans); font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; color:#555;">${c.puesto||c.titulo||'Perfil Técnico'} | 📍 ${city||'S/E'} ${c.modalidad?' | '+c.modalidad:''}</div>
+              <div style="margin: 0.5rem 0 1.5rem; font-family:var(--font-sans); font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; color:#555;">${c.puesto||c.titulo||'Perfil Técnico'} | 📍 ${city||'S/E'} ${c.modalidad?' | '+c.modalidad:''} ${ageVal?' | 🎂 '+ageVal+' años':''}</div>
               
-              ${c.resumen ? `<div style="border-left:2px solid #000; padding:0.2rem 1rem; color:#222; font-size:0.95rem; margin-bottom:2rem; font-style:italic;">"${c.resumen}"</div>` : ''}
+              ${c.resumen ? `<div style="border-left:2px solid #000; padding:0.2rem 1rem; color:#222; font-size:1rem; margin-bottom:2rem; font-style:italic;">"${c.resumen}"</div>` : ''}
 
               <div style="color:#000; border-bottom:1px solid #000; font-size:0.85rem; font-weight:700; margin-bottom:0.75rem; text-transform:uppercase;">Trayectoria Profesional</div>
               ${expHtml}
@@ -661,12 +698,12 @@
               <div style="display:grid; grid-template-columns:1fr 1fr; gap:2.5rem; margin-top:1.5rem;">
                 <div>
                   <div style="color:#000; border-bottom:1px solid #000; font-size:0.85rem; font-weight:700; margin-bottom:0.75rem; text-transform:uppercase;">Educación</div>
-                  ${c.edu1tit?`<div style="font-weight:700; font-size:.95rem;">${c.edu1inst||''}</div><div style="font-style:italic; font-size:.9rem; margin-bottom:.5rem;">${c.edu1tit} · ${c.edu1anio||''}</div>`:''}
-                  ${c.edu2tit?`<div style="font-weight:700; font-size:.95rem;">${c.edu2inst||''}</div><div style="font-style:italic; font-size:.9rem;">${c.edu2tit} · ${c.edu2anio||''}</div>`:''}
+                  ${c.edu1tit?`<div style="font-weight:700; font-size:1rem;">${c.edu1inst||''}</div><div style="font-style:italic; font-size:.95rem; margin-bottom:.5rem;">${c.edu1tit} · ${c.edu1anio||''}</div>`:''}
+                  ${c.edu2tit?`<div style="font-weight:700; font-size:1rem;">${c.edu1inst||''}</div><div style="font-style:italic; font-size:.95rem;">${c.edu2tit} · ${c.edu2anio||''}</div>`:''}
                 </div>
                 <div>
                   <div style="color:#000; border-bottom:1px solid #000; font-size:0.85rem; font-weight:700; margin-bottom:0.75rem; text-transform:uppercase;">Habilidades & Otros</div>
-                  <div style="font-size:.9rem;">
+                  <div style="font-size:1rem;">
                     ${c.skillsh?`<div><strong>Técnicas:</strong> ${c.skillsh}</div>`:''}
                     ${c.skillss?`<div><strong>Blandas:</strong> ${c.skillss}</div>`:''}
                     ${c.idiomas?`<div><strong>Idiomas:</strong> ${c.idiomas}</div>`:''}
@@ -695,6 +732,7 @@
           const initial = c.apellido ? c.apellido.charAt(0) + '.' : '';
           const blindName = `${c.nombre||'Candidato'} ${initial}`.trim();
           const city = [c.ciudad, c.provincia].filter(Boolean).join(', ');
+          const ageVal = getAge(c.birth_date);
           
           const expBlock = (emp, cargo, desde, hasta) => emp ? `
             <div style="margin-bottom:.75rem;">
@@ -706,7 +744,10 @@
             <div style="margin-bottom:2.5rem; padding-bottom:1.5rem; border-bottom:1px dashed rgba(201,168,76,.3); page-break-inside: avoid;">
               <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:.5rem;">
                 <h2 style="font-family:var(--font-serif); font-size:1.6rem; margin:0; color:var(--brown);">${blindName}</h2>
-                <span style="font-size:.75rem; background:rgba(201,168,76,.12); color:var(--gold-dark); padding:.3rem .8rem; border-radius:20px; font-weight:600; letter-spacing:.05em; text-transform:uppercase;">${c.puesto||c.titulo||'Perfil Técnico'}</span>
+                <div style="display:flex; flex-direction:column; align-items:flex-end; gap:.25rem;">
+                   <span style="font-size:.75rem; background:rgba(201,168,76,.12); color:var(--gold-dark); padding:.3rem .8rem; border-radius:20px; font-weight:600; letter-spacing:.05em; text-transform:uppercase;">${c.puesto||c.titulo||'Perfil Técnico'}</span>
+                   <span style="font-size:.7rem; color:var(--gray);">🎂 ${ageVal?ageVal+' años':'Edad no especificada'}</span>
+                </div>
               </div>
               
               <div style="margin-bottom:1.5rem; font-size:.8rem; color:var(--brown-mid); display:flex; gap:1.5rem;">

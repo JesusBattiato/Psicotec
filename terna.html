@@ -55,7 +55,7 @@
     @media (max-width: 600px) { .two-cols { grid-template-columns:1fr; gap:1.5rem; } .c-head{flex-direction:column; gap:.5rem;} }
 
     /* Harvard Mode Styles */
-    body.harvard-mode { font-family: var(--font-serif); }
+    body.harvard-mode { font-family: 'Libre Baskerville', serif; line-height: 1.6; font-size: 10.5pt; }
     .harvard-mode .container { max-width: 850px; }
     .harvard-mode .header { border-bottom: 1.5px solid #000; padding: 1rem 0 2rem; }
     .harvard-mode .header h1 { text-transform: uppercase; letter-spacing: 0.1em; font-size: 1.8rem; }
@@ -90,6 +90,16 @@
 
   <script>
     async function loadData() {
+      const getAge = (birthDate) => {
+        if (!birthDate) return null;
+        const today = new Date();
+        const birth = new Date(birthDate);
+        let a = today.getFullYear() - birth.getFullYear();
+        const m = today.getMonth() - birth.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) a--;
+        return a;
+      };
+
       const urlParams = new URLSearchParams(window.location.search);
       const idsParam = urlParams.get('c');
       const tplParam = urlParams.get('t'); // 'psicotec' o 'harvard'
@@ -146,7 +156,7 @@
               html += `
                 <div class="card">
                   <h2 class="c-name">${blindName}</h2>
-                  <div class="c-meta">${c.puesto||c.titulo||'Perfil Técnico'} | 📍 ${city||'S/E'} ${c.modalidad?' | '+c.modalidad:''}</div>
+                  <div class="c-meta">${c.puesto||c.titulo||'Perfil Técnico'} | 📍 ${city||'S/E'} ${c.modalidad?' | '+c.modalidad:''} ${ageVal?' | 🎂 '+ageVal+' años':''}</div>
                   
                   ${c.resumen ? `<div class="c-resumen">"${c.resumen}"</div>` : ''}
 
@@ -195,6 +205,7 @@
                   <div class="c-meta">
                     <span>📍 ${city||'S/E'}</span>
                      ${c.modalidad ? `<span>⏱ ${c.modalidad}</span>` : ''}
+                     <span>🎂 Edad: ${getAge(c.birth_date)||'—'}</span>
                   </div>
     
                   ${c.resumen ? `<div class="c-resumen">"${c.resumen}"</div>` : ''}

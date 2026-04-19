@@ -1470,9 +1470,10 @@
       background: #fff;
       padding: 4rem 5rem;
       box-shadow: var(--shadow-md);
-      font-family: 'Cormorant Garamond', serif;
+      font-family: 'Libre Baskerville', serif;
       color: #000;
-      line-height: 1.4;
+      line-height: 1.6;
+      font-size: 11pt;
     }
 
     .cv-t6 .cv-name {
@@ -2015,6 +2016,10 @@
               <input type="tel" id="f-tel" class="form-input" placeholder="Ej: 3873-123456">
             </div>
             <div class="form-group">
+              <label class="form-label" for="f-nacimiento">Fecha de nacimiento *</label>
+              <input type="date" id="f-nacimiento" class="form-input">
+            </div>
+            <div class="form-group">
               <label class="form-label" for="f-ciudad">Ciudad / Localidad *</label>
               <input type="text" id="f-ciudad" class="form-input" placeholder="Ej: Tartagal">
             </div>
@@ -2079,7 +2084,6 @@
                   <option value="">Seleccioná...</option>
                   <option>Sí, disponible para viajar y radicarme</option>
                   <option>Solo para viajar temporalmente</option>
-                  <option>Solo para radicarme definitivamente</option>
                   <option>No, busco trabajo solo en mi zona</option>
                 </select>
               </div>
@@ -2724,6 +2728,7 @@
       const v = (id, val) => { const e = document.getElementById(id); if (e) e.value = val || ''; };
       v('f-nombre', d.nombre); v('f-apellido', d.apellido); v('f-email', d.email);
       v('f-tel', d.tel); v('f-ciudad', d.ciudad); v('f-provincia', d.provincia);
+      v('f-nacimiento', d.birth_date);
       v('f-linkedin', d.linkedin); v('f-titulo', d.titulo); v('f-resumen', d.resumen);
       v('f-puesto', d.puesto); v('f-modalidad', d.modalidad); v('f-disponibilidad', d.disp);
       v('f-reloc', d.reloc);
@@ -2781,6 +2786,7 @@
         apellido: v('f-apellido'),
         email: v('f-email'),
         tel: v('f-tel'),
+        birth_date: v('f-nacimiento'),
         ciudad: v('f-ciudad'),
         provincia: v('f-provincia'),
         linkedin: v('f-linkedin'),
