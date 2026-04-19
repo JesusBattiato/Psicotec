@@ -14,10 +14,20 @@ serve(async (req) => {
   }
 
   try {
-    const { text, field } = await req.json()
+    const body = await req.json()
+    const { text, field } = body
+    console.log(`Petición recibida para campo: ${field}. Texto: "${text?.substring(0, 20)}..."`)
+
+    if (!GROQ_API_KEY) {
+      console.error("ERROR: No se encontró la variable GROQ_API_KEY.")
+      return new Response(JSON.stringify({ error: 'Configuración incompleta: Falta API Key en Supabase' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500,
+      })
+    }
 
     if (!text || text.length < 5) {
-      return new Response(JSON.stringify({ error: 'Texto insignificante' }), {
+      return new Response(JSON.stringify({ error: 'Texto demasiado corto para optimizar.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,
       })
