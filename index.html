@@ -1352,19 +1352,13 @@
         btn.innerHTML = '📧 Mail enviado. Revisá tu buzón.';
 
       } catch (err) {
-        console.warn('checkEmailGate error:', err);
-
-        // Si es timeout o error de red → dejamos pasar igual (baja fricción)
-        if (err.message === 'timeout' || err.message?.includes('network') || err.message?.includes('fetch')) {
-          document.getElementById('f-email').value = emailInput;
-          document.querySelector('.form-stepper').style.display = 'flex';
-          btn.innerHTML = origText; btn.disabled = false;
-          goTo(1);
-        } else {
-          // Error real (ej: email inválido en OTP)
-          btn.innerHTML = origText; btn.disabled = false;
-          alert('Hubo un problema de conexión. Intentá de nuevo.');
-        }
+        // Cualquier error (RLS, red, timeout, OTP) → siempre dejamos pasar
+        // La verificación es un plus, nunca un bloqueo
+        console.warn('checkEmailGate error (letting user through):', err?.message || err);
+        document.getElementById('f-email').value = emailInput;
+        document.querySelector('.form-stepper').style.display = 'flex';
+        btn.innerHTML = origText; btn.disabled = false;
+        goTo(1);
       }
     }
 
