@@ -254,6 +254,79 @@
       transform: none;
     }
 
+    /* AI SUGGESTION MODAL */
+    .ai-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(45, 38, 34, 0.4);
+      backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      padding: 1.5rem;
+      animation: fadeIn .3s ease;
+    }
+
+    .ai-modal-overlay.open {
+      display: flex;
+    }
+
+    .ai-modal {
+      background: var(--white);
+      max-width: 600px;
+      width: 100%;
+      border-radius: 8px;
+      padding: 2.5rem;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      position: relative;
+      animation: slideUp .4s var(--ease);
+    }
+
+    .ai-modal-title {
+      font-family: var(--font-serif);
+      font-size: 1.5rem;
+      color: var(--brown);
+      margin-bottom: .75rem;
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+    }
+
+    .ai-modal-subtitle {
+      font-size: .75rem;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: var(--gold-dark);
+      margin-bottom: 1.5rem;
+      font-weight: 600;
+    }
+
+    .ai-modal-content {
+      background: var(--cream);
+      padding: 1.5rem;
+      border-radius: 4px;
+      border-left: 3px solid var(--gold);
+      font-size: .95rem;
+      line-height: 1.7;
+      color: var(--brown-mid);
+      margin-bottom: 2rem;
+      min-height: 120px;
+      white-space: pre-wrap;
+    }
+
+    .ai-modal-actions {
+      display: flex;
+      gap: 1rem;
+      justify-content: flex-end;
+    }
+
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
     /* ==============================================
        NAVBAR
     ============================================== */
@@ -2607,6 +2680,19 @@
   <!-- Hidden print container -->
   <div id="print-target"></div>
 
+  <!-- MODAL SUGERENCIA IA -->
+  <div class="ai-modal-overlay" id="ai-modal-overlay">
+    <div class="ai-modal">
+      <div class="ai-modal-title">✨ Sugerencia de Psicotec</div>
+      <div class="ai-modal-subtitle">Optimización Profesional mediante Inteligencia Artificial</div>
+      <div id="ai-modal-text" class="ai-modal-content"></div>
+      <div class="ai-modal-actions">
+        <button class="btn btn--outline btn--sm" onclick="closeAiModal()">Descartar</button>
+        <button class="btn btn--primary btn--sm" id="ai-modal-apply">Aplicar Sugerencia</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ============================================================
        JAVASCRIPT
   ============================================================ -->
@@ -2654,16 +2740,15 @@
         });
 
         if (error) {
-          // Intentar extraer el mensaje de error del cuerpo si es posible
           const errData = await error.context?.json?.();
           throw new Error(errData?.error || error.message);
         }
 
         if (data && data.improvedText) {
-          if (confirm("✨ SUGERENCIA PSICOTEC:\n\n" + data.improvedText + "\n\n¿Querés usar esta versión?")) {
+          openAiModal(data.improvedText, () => {
             input.value = data.improvedText;
             showToast('¡Texto optimizado!', 'Hemos actualizado el campo con la sugerencia de la IA.', '✨');
-          }
+          });
         }
       } catch (err) {
         console.error("AI Error:", err);
@@ -2672,6 +2757,23 @@
         btn.disabled = false;
         btn.innerHTML = originalBtnText;
       }
+    }
+
+    function openAiModal(text, onApply) {
+      document.getElementById('ai-modal-text').innerText = text;
+      const overlay = document.getElementById('ai-modal-overlay');
+      const applyBtn = document.getElementById('ai-modal-apply');
+      
+      overlay.classList.add('open');
+      
+      applyBtn.onclick = () => {
+        onApply();
+        closeAiModal();
+      };
+    }
+
+    function closeAiModal() {
+      document.getElementById('ai-modal-overlay').classList.remove('open');
     }
 
     /* ================================================
