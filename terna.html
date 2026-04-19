@@ -79,7 +79,10 @@
         return;
       }
       
-      let idsArray = idsParam.split(',').map(id => id.trim()).filter(Boolean);
+      // Sanitizamos los IDs para eliminar caracteres no deseados (como asteriscos de negrita en WhatsApp)
+      let idsArray = idsParam.split(',')
+        .map(id => id.trim().replace(/[^a-f0-9-]/gi, '')) 
+        .filter(id => id.length > 0);
       
       try {
         const { data, error } = await supabase.from('candidates').select('*').in('id', idsArray);
