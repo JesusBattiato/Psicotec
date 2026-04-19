@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PSICOTEC — Terna Privada de Candidatos</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const supaUrl = 'https://mpbjcjsciodkqunquhbe.supabase.co';
+    const supaKey = 'sb_publishable_Uxulw0VL-Kxh2_hxxfjqMA_Ws7YwJJ1';
+    const supabase = window.supabase.createClient(supaUrl, supaKey);
+  </script>
+
+  <style>
+    :root {
+      --gold: #C9A84C; --gold-dark: #8B6914; --gold-light: #E8D4A0;
+      --brown: #2C2416; --brown-mid: #4A3728;
+      --cream: #FAF8F5; --gray: #8A8478;
+      --font-serif: 'Cormorant Garamond', Georgia, serif;
+      --font-sans: 'DM Sans', system-ui, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: var(--font-sans); background: #FAF8F5; color: #2C2416; min-height: 100vh; padding: 2rem 1rem; }
+    
+    .container { max-width: 800px; margin: 0 auto; }
+    
+    .header { text-align: center; margin-bottom: 3rem; padding-bottom: 2rem; border-bottom: 2px solid var(--gold); }
+    .header h1 { font-family: var(--font-serif); font-size: 2.2rem; color: var(--brown); margin: 0; }
+    .header .sub { font-size:.8rem; letter-spacing:.15em; text-transform:uppercase; color: var(--gold-dark); margin-top:.5rem; }
+    
+    .loader { text-align:center; padding:5rem 0; color:var(--gray); font-size:1.1rem; }
+    
+    .card { background: #fff; border: 1px solid rgba(201,168,76,.3); border-radius: 8px; padding: 2.5rem; margin-bottom: 2rem; box-shadow: 0 4px 20px rgba(44,36,22,0.05); }
+    .c-head { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:.5rem; border-bottom: 1px dashed rgba(201,168,76,.3); padding-bottom: 1rem; }
+    .c-name { font-family:var(--font-serif); font-size:1.8rem; margin:0; color:var(--brown); }
+    .c-badge { font-size:.7rem; background:rgba(201,168,76,.15); color:var(--gold-dark); padding:.4rem 1rem; border-radius:20px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; }
+    
+    .c-meta { display:flex; gap:1.5rem; font-size:.85rem; color:var(--brown-mid); margin:1.5rem 0; }
+    .c-resumen { font-size:.9rem; color:#555; line-height:1.6; padding: 1rem 1.5rem; background: #F8F5F0; border-left: 3px solid var(--gold-light); margin-bottom:1.5rem; font-style: italic; }
+    
+    .sec-t { font-size:.75rem; text-transform:uppercase; color:var(--gold-dark); letter-spacing:.1em; margin-bottom:1rem; border-bottom:1px solid rgba(201,168,76,.3); padding-bottom:.3rem; }
+    .two-cols { display:grid; grid-template-columns:1fr 1fr; gap:2.5rem; }
+    
+    @media print {
+      body { background: #fff; }
+      .card { border: none; box-shadow: none; border-bottom: 2px dashed #eee; border-radius: 0; padding:0; padding-bottom:2rem; break-inside: avoid; }
+      .header { border-bottom: 2px solid #2C2416; }
+      .c-resumen { background: transparent; border-left: 2px solid #2C2416; padding: 0.5rem 1rem; }
+    }
+    @media (max-width: 600px) { .two-cols { grid-template-columns:1fr; gap:1.5rem; } .c-head{flex-direction:column; gap:.5rem;} }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="header">
+      <h1>PSICOTEC</h1>
+      <div class="sub">Reporte de Terna Profesional (B2B)</div>
+      <p style="font-size:.85rem; color:var(--gray); margin-top:1rem;">Lic. Noelia Yair Maza - MP. 149</p>
+      <button onclick="window.print()" style="margin-top:1.5rem; padding:.5rem 1.5rem; background:var(--gold-dark); color:#fff; border:none; border-radius:4px; font-weight:600; cursor:pointer;">🖨 Guardar/Imprimir PDF</button>
+    </div>
+
+    <div id="content" class="loader">⏳ Descargando perfiles...</div>
+  </div>
+
+  <script>
+    async function loadData() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const idsParam = urlParams.get('c');
+      const content = document.getElementById('content');
+      
+      if (!idsParam) {
+        content.innerHTML = '⚠ Enlace inválido. No se detectaron perfiles designados.';
+        return;
+      }
+      
+      let idsArray = idsParam.split(',').map(id => id.trim()).filter(Boolean);
+      
+      try {
+        const { data, error } = await supabase.from('candidates').select('*').in('id', idsArray);
+        
+        if (error || !data || data.length === 0) {
+          content.innerHTML = '❌ Ocurrió un error o los perfiles ya no están disponibles en la base de Bolsa activa.';
+          return;
+        }
+
+        let html = '';
+        data.forEach(c => {
+          // Anonimizar: Inicial en el apellido
+          const initial = c.apellido ? c.apellido.charAt(0) + '.' : '';
+          const blindName = `${c.nombre||'Candidato'} ${initial}`.trim();
+          const city = [c.ciudad, c.provincia].filter(Boolean).join(', ');
+          
+          let expHtml = '';
+          const exps = typeof c.experiencias === 'string' ? JSON.parse(c.experiencias || '[]') : (c.experiencias || []);
+          if(exps.length > 0) {
+            exps.forEach(e => {
+              if(!e.emp) return;
+              expHtml += `
+                <div style="margin-bottom:1rem;">
+                  <div style="font-weight:600; font-size:.9rem; color:var(--brown);">${e.cargo||'Posición no especificada'}</div>
+                  <div style="font-size:.85rem; color:var(--brown-mid);">${e.emp} · ${[e.desde,e.hasta].filter(Boolean).join(' – ')}</div>
+                </div>`;
+            });
+          } else {
+             expHtml = '<div style="font-size:.85rem; color:var(--gray);">Trayectoria no detallada en plataforma.</div>';
+          }
+
+          html += `
+            <div class="card">
+              <div class="c-head">
+                <h2 class="c-name">${blindName}</h2>
+                <span class="c-badge">${c.puesto||c.titulo||'Perfil Técnico'}</span>
+              </div>
+              
+              <div class="c-meta">
+                <span>📍 ${city||'S/E'}</span>
+                 ${c.modalidad ? `<span>⏱ ${c.modalidad}</span>` : ''}
+              </div>
+
+              ${c.resumen ? `<div class="c-resumen">"${c.resumen}"</div>` : ''}
+
+              <div class="two-cols">
+                <div>
+                  <div class="sec-t">Trayectoria Operativa</div>
+                  ${expHtml}
+                </div>
+                <div>
+                  <div class="sec-t">Educación & Skills</div>
+                  <div style="margin-bottom:1.5rem;">
+                    ${c.edu1tit?`<div style="font-weight:600; font-size:.85rem; color:var(--brown);">${c.edu1tit}</div><div style="font-size:.8rem; color:var(--brown-mid);">${c.edu1inst||''}</div>`:''}
+                    ${c.edu2tit?`<div style="font-weight:600; font-size:.85rem; color:var(--brown); margin-top:.5rem;">${c.edu2tit}</div><div style="font-size:.8rem; color:var(--brown-mid);">${c.edu2inst||''}</div>`:''}
+                  </div>
+                  ${c.skillsh?`<div style="font-size:.82rem; margin-bottom:.4rem; color:#444;"><strong style="color:var(--brown);">Técnicas:</strong> ${c.skillsh}</div>`:''}
+                  ${c.skillss?`<div style="font-size:.82rem; margin-bottom:.4rem; color:#444;"><strong style="color:var(--brown);">Blandas:</strong> ${c.skillss}</div>`:''}
+                  ${c.idiomas?`<div style="font-size:.82rem; color:#444;"><strong style="color:var(--brown);">Idiomas:</strong> ${c.idiomas}</div>`:''}
+                </div>
+              </div>
+            </div>
+          `;
+        });
+        
+        content.innerHTML = html;
+        
+      } catch (err) {
+        content.innerHTML = '❌ Problema de conexión a base blindada.';
+      }
+    }
+    
+    loadData();
+  </script>
+</body>
+</html>

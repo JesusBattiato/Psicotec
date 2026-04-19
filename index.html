@@ -719,8 +719,24 @@
           <button class="step-btn"        data-step="5" id="sbtn-5" onclick="goTo(5)">5. Habilidades y envío</button>
         </div>
 
-        <!-- PANEL 1: Datos Personales -->
-        <div class="form-panel active" id="panel-1">
+        <!-- PANEL 0: Smart Email Gate -->
+        <div class="form-panel active" id="panel-0">
+          <div style="text-align:center; padding: 2rem 0;">
+            <p style="font-size: 2rem; margin-bottom: 1rem;">👋</p>
+            <h3 style="color:var(--brown); margin-bottom: 1rem;">¡Hola! Empecemos con tu email</h3>
+            <p style="color:var(--gray-mid); font-size: .85rem; margin-bottom: 2rem; max-width: 400px; margin-inline: auto;">Si ya habías cargado tu CV en Psicotec, te lo recuperaremos al instante para que no tengas que escribirlo de nuevo.</p>
+            
+            <div class="form-group" style="max-width: 320px; margin: 0 auto; text-align: left;">
+              <input type="email" id="f-gate-email" class="form-input" style="padding: .85rem; font-size: 1rem; text-align: center;" placeholder="Ingresá tu email">
+            </div>
+          </div>
+          <div class="form-nav" style="justify-content: center;">
+             <button class="btn btn--primary" id="btn-gate-check" style="padding: .8rem 3rem;" onclick="checkEmailGate()">Continuar →</button>
+          </div>
+        </div>
+
+        <!-- PANEL 1: Datos Personales (Modificado a inactivo inicial) -->
+        <div class="form-panel" id="panel-1">
           <div class="form-grid">
             <div class="form-group span-2">
               <label class="form-label" for="f-foto-file">Foto de Perfil Formal (Opcional)</label>
@@ -1272,10 +1288,106 @@
     });
 
     /* ================================================
-       FORM STEPPER
+       AUTH / SMART GATE (PASO 0)
     ================================================ */
-    let currentStep = 1;
+    let CURRENT_RECORD_ID = null; // Guardará el UUID si el perfil ya existe
+
+    async function checkEmailGate() {
+      const emailInput = document.getElementById('f-gate-email').value.trim().toLowerCase();
+      if (!emailInput || !emailInput.includes('@')) {
+         alert('Por favor ingresá un email válido.'); return;
+      }
+      
+      const btn = document.getElementById('btn-gate-check');
+      const origText = btn.innerHTML;
+      btn.innerHTML = 'Verificando...'; btn.disabled = true;
+
+      // 1. Buscamos si existe en candidates
+      const { data, error } = await supabase.from('candidates').select('*').eq('email', emailInput);
+      
+      if (error) {
+         console.error('Error al buscar candidato:', error);
+         alert('Hubo un error de red. Intenta nuevamente.');
+         btn.innerHTML = origText; btn.disabled = false;
+         return;
+      }
+
+      // 2. Si NO existe -> Avanzamos a crear currículum en limpio y ocultamos todo (modo Alta)
+      if (!data || data.length === 0) {
+         document.getElementById('f-email').value = emailInput;
+         document.querySelector('.form-stepper').style.display = 'flex';
+         goTo(1);
+         return;
+      }
+
+      // 3. SI EXISTE -> Disparamos OTP (Magic Link)
+      alert(`¡Qué bueno verte de nuevo! Encontramos tu perfil asociado a ${emailInput}.\n\nPara proteger tus datos, te hemos enviado un link directo a tu correo. Ábrelo para poder editar tu CV.`);
+      
+      const res = await supabase.auth.signInWithOtp({
+        email: emailInput,
+        options: { emailRedirectTo: window.location.origin + window.location.pathname }
+      });
+
+      if (res.error) console.error("OTP Error:", res.error);
+      btn.innerHTML = 'Mail enviado. Revisa tu buzón.';
+    }
+
+    // Al cargar la página, validar si viene del Magic Link
+    window.addEventListener('DOMContentLoaded', async () => {
+       document.querySelector('.form-stepper').style.display = 'none'; // ocultar stepper al inicio
+
+       const { data: { session }, error } = await supabase.auth.getSession();
+       if (session) {
+          // Usuario viene autenticado vía correo! Lo logueamos transparentemente.
+          const userEmail = session.user.email;
+          const { data: profile } = await supabase.from('candidates').select('*').eq('email', userEmail).single();
+          
+          if (profile) {
+             CURRENT_RECORD_ID = profile.id;
+             document.querySelector('.form-stepper').style.display = 'flex';
+             prefillForm(profile);
+             goTo(1);
+          }
+       }
+    });
+
+    function prefillForm(d) {
+       const v = (id, val) => { const e=document.getElementById(id); if(e) e.value = val||''; };
+       v('f-nombre', d.nombre); v('f-apellido', d.apellido); v('f-email', d.email);
+       v('f-tel', d.tel); v('f-ciudad', d.ciudad); v('f-provincia', d.provincia);
+       v('f-linkedin', d.linkedin); v('f-titulo', d.titulo); v('f-resumen', d.resumen);
+       v('f-puesto', d.puesto); v('f-modalidad', d.modalidad); v('f-disponibilidad', d.disp);
+       v('f-edu1-tit', d.edu1tit); v('f-edu1-niv', d.edu1niv); v('f-edu1-inst', d.edu1inst); v('f-edu1-anio', d.edu1anio);
+       v('f-edu2-tit', d.edu2tit); v('f-edu2-inst', d.edu2inst); v('f-edu2-anio', d.edu2anio);
+       v('f-skills-h', d.skillsh); v('f-skills-s', d.skillss); v('f-idiomas', d.idiomas);
+       
+       if (d.consent !== undefined) { document.getElementById('f-consent').checked = d.consent; }
+       if (d.foto) CURRENT_PHOTO_B64 = d.foto;
+
+       // Exp dinámicas
+       const exps = typeof d.experiencias === 'string' ? JSON.parse(d.experiencias||'[]') : (d.experiencias||[]);
+       document.getElementById('experiencias-container').innerHTML = ''; // limpiamos el bloc 1
+       expCount = 0;
+       if (exps.length === 0) addExperience(); // dejar uno vacío if clean
+       exps.forEach(e => {
+          addExperience();
+          const lastBlock = document.getElementById(`exp-block-${expCount}`);
+          if (lastBlock) {
+             lastBlock.querySelector('.dyn-emp').value = e.emp||'';
+             lastBlock.querySelector('.dyn-cargo').value = e.cargo||'';
+             lastBlock.querySelector('.dyn-desde').value = e.desde||'';
+             lastBlock.querySelector('.dyn-hasta').value = e.hasta||'';
+             lastBlock.querySelector('.dyn-desc').value = e.desc||'';
+          }
+       });
+    }
+
+    /* ================================================
+       COLLECT DATA & FORM STEPPER
+    ================================================ */
+    let currentStep = 0;
     function goTo(step) {
+      if (step > 0) document.querySelector('.form-stepper').style.display = 'flex';
       document.querySelectorAll('.form-panel').forEach(p => p.classList.remove('active'));
       document.querySelectorAll('.step-btn').forEach(b => {
         const s = parseInt(b.dataset.step);
@@ -1284,11 +1396,10 @@
       });
       document.getElementById(`panel-${step}`).classList.add('active');
       currentStep = step;
-      // Scroll removido para mantener la página estática
     }
 
     /* ================================================
-       COLLECT DATA
+       DATA PARSER
     ================================================ */
     function getData() {
       const v = id => document.getElementById(id)?.value?.trim() || '';
@@ -1489,7 +1600,7 @@
     }
 
     /* ================================================
-       GENERATE CVs
+       GENERATE CVs (AND SAVE)
     ================================================ */
     async function generateCVs() {
       const d = getData();
@@ -1497,21 +1608,36 @@
         alert('Por favor completá al menos tu nombre y apellido en el Paso 1.');
         goTo(1); return;
       }
+      if (!d.email) {
+        alert('El email es obligatorio. Regresa al paso 1 por favor.'); return;
+      }
       
       const btn = document.querySelector('button[onclick="generateCVs()"]');
       const originalText = btn.innerHTML;
-      btn.innerHTML = '⏳ Guardando...';
+      btn.innerHTML = '⏳ Guardando en la Bolsa...';
       btn.disabled = true;
 
       try {
-        await supabase.from('candidates').insert([d]);
+        if (CURRENT_RECORD_ID) {
+           // ES UN UPDATE SEGURO (El usuario ya entró por Magic Link)
+           await supabase.from('candidates').update(d).eq('id', CURRENT_RECORD_ID);
+        } else {
+           // ES UN ALTA NUEVA (Insert normal)
+           const { data: insertedData, error: insertError } = await supabase.from('candidates').insert([d]).select();
+           if (insertedData && insertedData.length > 0) CURRENT_RECORD_ID = insertedData[0].id;  // lo guardamos por si vuelve a editar hoy mismo.
+           
+           // Opcional: Como es alta nueva y pusimos su email, podríamos "linkearlo" o enviarle Magic Link de confirmación si quisiéramos,
+           // pero como el Flow "Baja Fricción" dicta, lo dejamos seguir feliz.
+        }
       } catch (e) {
         console.error('Error guardando en Supabase', e);
+        alert('Hubo un error de conexión, pero se guardará una copia de tu CV.');
       }
       
       /* save to localStorage fallback for local preview just in case */
       const list = JSON.parse(localStorage.getItem('psicotec_candidates') || '[]');
-      list.push(d);
+      const existIdx = list.findIndex(x => x.email === d.email);
+      if(existIdx >= 0) list[existIdx] = d; else list.push(d);
       localStorage.setItem('psicotec_candidates', JSON.stringify(list));
 
       btn.innerHTML = originalText;
