@@ -1504,8 +1504,8 @@
 
     function getExperiencias() {
        const arr = [];
-       document.querySelectorAll('.exp-block').forEach(b => {
-          const emp = b.querySelector('.dyn-emp').value.trim();
+       document.querySelectorAll('#experiencias-container .exp-block').forEach(b => {
+          const emp = b.querySelector('.dyn-emp')?.value.trim();
           if(!emp) return;
           arr.push({
             emp: emp,
