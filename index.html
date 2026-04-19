@@ -14,7 +14,9 @@
   <script>
     const supaUrl = 'https://mpbjcjsciodkqunquhbe.supabase.co';
     const supaKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1wYmpjanNjaW9ka3F1bnF1aGJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1MTkzNDksImV4cCI6MjA5MjA5NTM0OX0.8hVICziJLVEIIuDKdYwP28kOxuIGxuZhIB378u96xUk';
-    const supabase = window.supabase.createClient(supaUrl, supaKey);
+    // Sobreescribimos window.supabase (la lib) con el cliente ya inicializado
+    // Evita el SyntaxError "already declared" al convivir con el CDN
+    window.supabase = window.supabase.createClient(supaUrl, supaKey);
   </script>
 
   <style>
