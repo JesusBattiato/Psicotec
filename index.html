@@ -334,7 +334,7 @@
     .cv-wrap { display: none; }
     .cv-wrap.visible {
       display: block;
-      overflow: hidden;
+      overflow-x: auto;
       word-break: break-word;
       overflow-wrap: anywhere;
     }
@@ -595,12 +595,7 @@
     @media (max-width: 900px) {
       .companies-layout { grid-template-columns:1fr; }
       .footer-grid       { grid-template-columns:1fr; }
-      .cv-t2 { grid-template-columns:1fr; }
-      .cv-t3-body { grid-template-columns:1fr; }
-      .cv-t4-two { grid-template-columns:1fr; }
-      .cv-t5-body { grid-template-columns:1fr; }
-      .cv-t5-top { flex-direction:column; gap:1rem; }
-      .cv-t5-contact-right { text-align:left; }
+      /* Se eliminan reglas que apilan columnas en CVs para mantener diseño consistente */
       .form-grid { grid-template-columns:1fr; }
       .form-grid--3 { grid-template-columns:1fr 1fr; }
       .span-2 { grid-column:span 1; }
@@ -1797,10 +1792,11 @@
         @media print {
           body > *:not(#print-target){display:none!important}
           #print-target{display:block!important}
-          .cv-t2{grid-template-columns:220px 1fr!important}
+          .cv-t2{grid-template-columns:240px 1fr!important}
           .cv-t3-body{grid-template-columns:1fr 1fr!important}
           .cv-t4-two{grid-template-columns:1fr 1fr!important}
           .cv-t5-body{grid-template-columns:1fr 1fr!important}
+          @page { size: A4; margin: 0; }
         }`;
       document.head.appendChild(styleTag);
 
