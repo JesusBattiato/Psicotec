@@ -35,7 +35,7 @@ serve(async (req) => {
 
     let modelToUse = 'llama-3.1-8b-instant';
     if (imageBase64) {
-      modelToUse = 'llama-3.2-11b-vision-preview'; // Modelo con soporte de visión
+      modelToUse = 'llama-3.2-90b-vision-preview'; // Modelo con soporte de visión actualizado
     }
 
     let systemPrompt = `Eres un experto en Selección de Personal y Redacción Curricular de la consultora Psicotec. 
