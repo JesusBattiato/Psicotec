@@ -23,6 +23,15 @@
     window.supabase = window.supabase.createClient(supaUrl, supaKey);
   </script>
 
+  <!-- Manejo de Documentos (Autofill local) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.21/mammoth.browser.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+  <script>
+    if (window['pdfjs-dist/build/pdf']) {
+      window['pdfjs-dist/build/pdf'].GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+    }
+  </script>
+
   <style>
     /* ==============================================
        ROOT & RESET
@@ -279,6 +288,8 @@
       background: var(--white);
       max-width: 600px;
       width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
       border-radius: 8px;
       padding: 2.5rem;
       box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
@@ -2098,6 +2109,14 @@
 
         <!-- PANEL 1: Datos Personales (Modificado a inactivo inicial) -->
         <div class="form-panel" id="panel-1">
+          <!-- Autocompletado UI -->
+          <div style="background: rgba(201, 168, 76, 0.08); border: 1.5px dashed rgba(201,168,76,.6); border-radius: 8px; padding: 1.5rem; text-align: center; margin-bottom: 2rem;">
+            <p style="color: var(--brown); font-weight: 600; margin-bottom: .5rem;">✨ Magic Autofill: ¿Tenés tu viejo CV a mano?</p>
+            <p style="font-size: .8rem; color: var(--gray-mid); margin-bottom: 1rem;">Subí tu currículum (PDF, Word o Imagen) y la Inteligencia Artificial extraerá tus datos para que no tengas que escribir de cero.</p>
+            <input type="file" id="f-autofill-file" accept=".pdf,.doc,.docx,image/*" style="display:none;" onchange="handleAutofill(this)">
+            <label for="f-autofill-file" class="btn btn--outline btn--sm" id="btn-autofill">Subir archivo y autocompletar</label>
+          </div>
+
           <div class="form-grid">
             <div class="form-group span-2">
               <label class="form-label" for="f-foto-file">Foto de Perfil Formal (Opcional)</label>
@@ -2151,7 +2170,7 @@
         <div class="form-panel" id="panel-2">
           <div class="form-grid form-grid--1">
             <div class="form-group">
-              <label class="form-label" for="f-resumen">Resumen / Descripción personal</label>
+              <label class="form-label" for="f-resumen">Resumen / Descripción personal *</label>
               <textarea id="f-resumen" class="form-textarea"
                 placeholder="Describí brevemente quién sos profesionalmente, tus puntos fuertes y qué tipo de puesto buscás. (2 a 4 oraciones)"
                 style="min-height:120px;"></textarea>
@@ -2164,7 +2183,7 @@
             </div>
             <div class="form-grid" style="margin-top:.25rem;">
               <div class="form-group">
-                <label class="form-label" for="f-modalidad">Modalidad preferida</label>
+                <label class="form-label" for="f-modalidad">Modalidad preferida *</label>
                 <select id="f-modalidad" class="form-select">
                   <option value="">Seleccioná...</option>
                   <option>Presencial</option>
@@ -2174,7 +2193,7 @@
                 </select>
               </div>
               <div class="form-group">
-                <label class="form-label" for="f-disponibilidad">Disponibilidad horaria</label>
+                <label class="form-label" for="f-disponibilidad">Disponibilidad horaria *</label>
                 <select id="f-disponibilidad" class="form-select">
                   <option value="">Seleccioná...</option>
                   <option>Full-time (8 hs)</option>
@@ -2185,13 +2204,25 @@
                 </select>
               </div>
               <div class="form-group span-2">
-                <label class="form-label" for="f-reloc">¿Estás dispuesto a viajar o radicarte en otra ciudad/provincia?</label>
+                <label class="form-label" for="f-reloc">¿Estás dispuesto a viajar o radicarte en otra ciudad/provincia? *</label>
                 <select id="f-reloc" class="form-select">
                   <option value="">Seleccioná...</option>
                   <option>Sí, disponible para viajar y radicarme</option>
                   <option>Solo para viajar temporalmente</option>
                   <option>No, busco trabajo solo en mi zona</option>
                 </select>
+              </div>
+
+              <!-- AI Matching Job Offer -->
+              <div class="form-group span-2" style="background: var(--cream-dark); padding: 1.5rem; border-radius: 8px; margin-top: 1rem;">
+                <label class="form-label">Alineación Estratégica IA (Opcional)</label>
+                <p style="font-size: .8rem; color: var(--gray-mid); margin-bottom: 1rem;">Sube una captura de pantalla o foto del anuncio de trabajo al que piensas aplicar. Las "Sugerencias IA" de todo el formulario harán un match exacto perfilándote como el candidato ideal.</p>
+                <input type="file" id="f-job-file" accept="image/*" style="display:none;" onchange="handleJobImage(this)">
+                <div style="display:flex; gap: 1rem; align-items:center;">
+                   <label for="f-job-file" class="btn btn--outline btn--sm" id="btn-job-img">📸 Subir requerimientos del puesto</label>
+                   <img id="job-preview" style="max-height: 48px; border-radius: 4px; display:none;" src="">
+                   <button type="button" id="btn-job-remove" style="display:none; color: #e57373; font-size:.7rem; cursor:pointer; border:none; background:none;" onclick="removeJobImage()">Quitar</button>
+                </div>
               </div>
             </div>
           </div>
@@ -2309,13 +2340,13 @@
         <div class="form-panel" id="panel-5">
           <div class="form-grid form-grid--1">
             <div class="form-group">
-              <label class="form-label" for="f-skills-h">Habilidades técnicas / conocimientos</label>
+              <label class="form-label" for="f-skills-h">Habilidades técnicas / conocimientos *</label>
               <textarea id="f-skills-h" class="form-textarea"
                 placeholder="Ej: Excel avanzado, manejo de caja, atención al cliente, conducción de vehículos, carga de stock...&#10;Separalos con comas."></textarea>
               <button type="button" class="btn-magic" onclick="optimizeText('f-skills-h', 'skills')">✨ Sugerencia IA</button>
             </div>
             <div class="form-group">
-              <label class="form-label" for="f-skills-s">Competencias personales</label>
+              <label class="form-label" for="f-skills-s">Competencias personales *</label>
               <textarea id="f-skills-s" class="form-textarea"
                 placeholder="Ej: Trabajo en equipo, resolución de problemas, comunicación, liderazgo, proactividad...&#10;Separalos con comas."></textarea>
               <button type="button" class="btn-magic" onclick="optimizeText('f-skills-s', 'skills')">✨ Sugerencia IA</button>
@@ -2368,12 +2399,12 @@
 
         <!-- Template selector -->
         <div class="cv-selector-bar">
-          <button class="cv-sel-btn active" id="sel-1" onclick="showTpl(1)">1 · Ejecutivo Clásico</button>
+          <button class="cv-sel-btn" id="sel-1" onclick="showTpl(1)">1 · Ejecutivo Clásico</button>
           <button class="cv-sel-btn" id="sel-2" onclick="showTpl(2)">2 · Moderno Azul</button>
-          <button class="cv-sel-btn" id="sel-3" onclick="showTpl(3)">3 · Psicotec Premium ✨</button>
+          <button class="cv-sel-btn" id="sel-3" onclick="showTpl(3)">3 · Psicotec</button>
           <button class="cv-sel-btn" id="sel-4" onclick="showTpl(4)">4 · Minimalista</button>
           <button class="cv-sel-btn" id="sel-5" onclick="showTpl(5)">5 · Corporativo</button>
-          <button class="cv-sel-btn" id="sel-6" onclick="showTpl(6)">6 · Harvard Elite ✨</button>
+          <button class="cv-sel-btn active" id="sel-6" onclick="showTpl(6)">6 · Harvard Elite ✨</button>
         </div>
 
         <!-- Actions -->
@@ -2665,6 +2696,7 @@
           <div class="footer-col-title">Contacto</div>
           <ul class="footer-links">
             <li><a href="tel:+543873351125">📞 3873-351125</a></li>
+            <li><a href="mailto:cpsicotec@gmail.com">✉️ cpsicotec@gmail.com</a></li>
             <li><a href="https://www.instagram.com/psicotec_consultora/" target="_blank">📸 @psicotec_consultora</a>
             </li>
             <li><a href="https://wa.me/543873351125" target="_blank">💬 WhatsApp directo</a></li>
@@ -2721,8 +2753,31 @@
     });
 
     /* ====================================================
-       AI SUGGESTION (Groq via Edge Function)
+       AI SUGGESTION & MATCHING (Groq via Edge Function)
     ==================================================== */
+    let JOB_POSTING_B64 = null;
+
+    function handleJobImage(input) {
+      if (!input.files || !input.files[0]) return;
+      var reader = new FileReader();
+      reader.onloadend = function () {
+        JOB_POSTING_B64 = reader.result;
+        document.getElementById('job-preview').src = JOB_POSTING_B64;
+        document.getElementById('job-preview').style.display = 'block';
+        document.getElementById('btn-job-remove').style.display = 'block';
+        document.getElementById('btn-job-img').innerHTML = 'Cambiar foto';
+      }
+      reader.readAsDataURL(input.files[0]);
+    }
+
+    function removeJobImage() {
+      JOB_POSTING_B64 = null;
+      document.getElementById('f-job-file').value = '';
+      document.getElementById('job-preview').style.display = 'none';
+      document.getElementById('btn-job-img').innerHTML = '📸 Subir requerimientos del puesto';
+      document.getElementById('btn-job-remove').style.display = 'none';
+    }
+
     async function optimizeText(idOrElem, field) {
       const input = (typeof idOrElem === 'string') ? document.getElementById(idOrElem) : idOrElem;
       const originalText = input.value.trim();
@@ -2737,8 +2792,13 @@
       btn.innerHTML = "⏳ Profesionalizando...";
 
       try {
+        const payload = { text: originalText, field: field };
+        if (JOB_POSTING_B64) {
+           payload.imageBase64 = JOB_POSTING_B64;
+        }
+
         const { data, error } = await supabase.functions.invoke('psicotec-ai', {
-          body: { text: originalText, field: field }
+          body: payload
         });
 
         if (error) {
@@ -2776,6 +2836,84 @@
 
     function closeAiModal() {
       document.getElementById('ai-modal-overlay').classList.remove('open');
+    }
+
+    /* ================================================
+       MAGIC AUTOFILL (Paso 1)
+    ================================================ */
+    async function handleAutofill(input) {
+      if (!input.files || !input.files[0]) return;
+      const file = input.files[0];
+      const btn = document.getElementById('btn-autofill');
+      const origText = btn.innerHTML;
+      
+      btn.innerHTML = '⏳ Leyendo documento...';
+      btn.style.pointerEvents = 'none';
+      btn.style.opacity = '0.6';
+
+      try {
+        let textContent = "";
+        let imageContent = null;
+        
+        if (file.type === "application/pdf" || file.name.endsWith('.pdf')) {
+           const arrayBuffer = await file.arrayBuffer();
+           const pdf = await window['pdfjs-dist/build/pdf'].getDocument({ data: arrayBuffer }).promise;
+           let fullText = "";
+           for (let i = 1; i <= pdf.numPages; i++) {
+             const page = await pdf.getPage(i);
+             const textContentObj = await page.getTextContent();
+             const strings = textContentObj.items.map(item => item.str);
+             fullText += strings.join(" ") + " ";
+           }
+           textContent = fullText;
+        } else if (file.name.endsWith('.docx') || file.name.endsWith('.doc')) {
+           const arrayBuffer = await file.arrayBuffer();
+           const result = await mammoth.extractRawText({ arrayBuffer: arrayBuffer });
+           textContent = result.value;
+        } else if (file.type.startsWith('image/')) {
+           const reader = new FileReader();
+           imageContent = await new Promise((resolve) => {
+             reader.onloadend = () => resolve(reader.result);
+             reader.readAsDataURL(file);
+           });
+        } else {
+           throw new Error("Formato no soportado. Usa PDF, Word o imágenes.");
+        }
+
+        btn.innerHTML = '✨ Ejecutando extracción IA...';
+        
+        const payload = { field: 'autofill' };
+        if (imageContent) payload.imageBase64 = imageContent;
+        if (textContent) payload.text = textContent;
+
+        const { data, error } = await supabase.functions.invoke('psicotec-ai', { body: payload });
+        
+        if (error) {
+          const errData = await error.context?.json?.();
+          throw new Error(errData?.error || error.message);
+        }
+
+        let profileData = {};
+        try {
+           profileData = JSON.parse(data.improvedText);
+        } catch(e) {
+           console.error("No se pudo parsear el JSON:", data.improvedText);
+           throw new Error("El modelo de IA reaccionó de forma inesperada.");
+        }
+
+        // Incorporando al formulario
+        prefillForm(profileData);
+        showToast('¡Autocompletado Exitoso!', 'Tus datos se rellenaron mediante Inteligencia Artificial. Revisalos por si hay omitidos.', '✨');
+
+      } catch (err) {
+        console.error(err);
+        showToast('Error', err.message || 'No se pudo procesar el archivo.', '❌');
+      } finally {
+        input.value = '';
+        btn.innerHTML = origText;
+        btn.style.pointerEvents = 'auto';
+        btn.style.opacity = '1';
+      }
     }
 
     /* ================================================
@@ -3044,6 +3182,20 @@
           desc: b.querySelector('.dyn-desc')?.value.trim() || ''
         });
       });
+
+      // Auto-sort from newest to oldest based on "hasta" and "desde" year parsing
+      arr.sort((a, b) => {
+        function getYear(str) {
+          str = str.toLowerCase();
+          if (str.includes('actualmente') || str.includes('hoy') || str.includes('presente')) return 9999;
+          const match = str.match(/(?:19|20)\d{2}/);
+          return match ? parseInt(match[0], 10) : 0;
+        }
+        const yearA = getYear(a.hasta || a.desde);
+        const yearB = getYear(b.hasta || b.desde);
+        return yearB - yearA;
+      });
+
       return arr;
     }
 
@@ -3186,12 +3338,17 @@
     ================================================ */
     async function generateCVs() {
       const d = getData();
-      if (!d.nombre && !d.apellido) {
-        alert('Por favor completá al menos tu nombre y apellido en el Paso 1.');
+      if (!d.nombre || !d.apellido || !d.email) {
+        alert('Nombre, apellido y email son obligatorios en el Paso 1.');
         goTo(1); return;
       }
-      if (!d.email) {
-        alert('El email es obligatorio. Regresa al paso 1 por favor.'); return;
+      if (!d.resumen || !d.modalidad || !d.disp || !d.reloc || !d.puesto) {
+        alert('Puesto buscado, resumen, modalidad, disponibilidad y radicación son obligatorios en el Paso 2.');
+        goTo(2); return;
+      }
+      if (!d.skillss || !d.skillsh) {
+        alert('Habilidades técnicas y competencias son obligatorias en el Paso 5.');
+        goTo(5); return;
       }
 
       const btn = document.querySelector('button[onclick="generateCVs()"]');
@@ -3230,7 +3387,7 @@
       const results = document.getElementById('cv-results');
       results.style.display = 'block';
       results.querySelectorAll('.reveal').forEach(el => el.classList.add('revealed'));
-      showTpl(1);
+      showTpl(6);
       setTimeout(() => results.scrollIntoView({ behavior: 'smooth', block: 'start' }), 200);
     }
 
@@ -3380,6 +3537,18 @@
       );
       window.open(`https://wa.me/543873351125?text=${text}`, '_blank');
     }
+
+    /* ================================================
+       AUTO-CAPITALIZE FIRST LETTER (On Blur)
+    ================================================ */
+    document.body.addEventListener('focusout', function(e) {
+      if (e.target && (e.target.classList.contains('form-input') || e.target.classList.contains('form-textarea'))) {
+        let val = e.target.value;
+        if (val && typeof val === 'string' && val.length > 0) {
+          e.target.value = val.charAt(0).toUpperCase() + val.slice(1);
+        }
+      }
+    });
   </script>
 </body>
 
