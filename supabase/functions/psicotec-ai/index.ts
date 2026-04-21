@@ -35,6 +35,10 @@ serve(async (req) => {
 
     const VISION_MODELS = [
       Deno.env.get('GROQ_VISION_MODEL'),
+      'llama-3.2-11b-vision',
+      'llama-3.2-90b-vision',
+      'meta-llama/llama-3.2-11b-vision-instruct',
+      'meta-llama/llama-3.2-90b-vision-instruct',
       'llama-3.2-11b-vision-instruct',
       'llama-3.2-90b-vision-instruct',
       'llama-3.2-11b-vision-preview',

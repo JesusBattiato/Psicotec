@@ -2169,6 +2169,18 @@
         <!-- PANEL 2: Perfil Profesional -->
         <div class="form-panel" id="panel-2">
           <div class="form-grid form-grid--1">
+              <!-- AI Matching Job Offer -->
+              <div class="form-group span-2" style="background: var(--cream-dark); padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem;">
+                <label class="form-label">Alineación Estratégica IA (Opcional)</label>
+                <p style="font-size: .8rem; color: var(--gray-mid); margin-bottom: 1rem;">Sube una captura de pantalla o foto del anuncio de trabajo al que piensas aplicar. Las "Sugerencias IA" de todo el formulario harán un match exacto perfilándote como el candidato ideal.</p>
+                <input type="file" id="f-job-file" accept="image/*" style="display:none;" onchange="handleJobImage(this)">
+                <div style="display:flex; gap: 1rem; align-items:center;">
+                   <label for="f-job-file" class="btn btn--outline btn--sm" id="btn-job-img">📸 Subir requerimientos del puesto</label>
+                   <img id="job-preview" style="max-height: 48px; border-radius: 4px; display:none;" src="">
+                   <button type="button" id="btn-job-remove" style="display:none; color: #e57373; font-size:.7rem; cursor:pointer; border:none; background:none;" onclick="removeJobImage()">Quitar</button>
+                </div>
+              </div>
+
             <div class="form-group">
               <label class="form-label" for="f-resumen">Resumen / Descripción personal *</label>
               <textarea id="f-resumen" class="form-textarea"
@@ -2213,17 +2225,6 @@
                 </select>
               </div>
 
-              <!-- AI Matching Job Offer -->
-              <div class="form-group span-2" style="background: var(--cream-dark); padding: 1.5rem; border-radius: 8px; margin-top: 1rem;">
-                <label class="form-label">Alineación Estratégica IA (Opcional)</label>
-                <p style="font-size: .8rem; color: var(--gray-mid); margin-bottom: 1rem;">Sube una captura de pantalla o foto del anuncio de trabajo al que piensas aplicar. Las "Sugerencias IA" de todo el formulario harán un match exacto perfilándote como el candidato ideal.</p>
-                <input type="file" id="f-job-file" accept="image/*" style="display:none;" onchange="handleJobImage(this)">
-                <div style="display:flex; gap: 1rem; align-items:center;">
-                   <label for="f-job-file" class="btn btn--outline btn--sm" id="btn-job-img">📸 Subir requerimientos del puesto</label>
-                   <img id="job-preview" style="max-height: 48px; border-radius: 4px; display:none;" src="">
-                   <button type="button" id="btn-job-remove" style="display:none; color: #e57373; font-size:.7rem; cursor:pointer; border:none; background:none;" onclick="removeJobImage()">Quitar</button>
-                </div>
-              </div>
             </div>
           </div>
           <div class="form-nav">
