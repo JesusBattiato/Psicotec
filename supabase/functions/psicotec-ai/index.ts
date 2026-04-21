@@ -33,10 +33,15 @@ serve(async (req) => {
       })
     }
 
-    let modelToUse = 'llama-3.1-8b-instant';
-    if (imageBase64) {
-      modelToUse = 'llama-3.2-90b-vision-preview'; // Modelo con soporte de visión actualizado
-    }
+    const VISION_MODELS = [
+      Deno.env.get('GROQ_VISION_MODEL'),
+      'llama-3.2-11b-vision-instruct',
+      'llama-3.2-90b-vision-instruct',
+      'llama-3.2-11b-vision-preview',
+      'llama-3.2-90b-vision-preview'
+    ].filter(Boolean);
+
+    let modelsToTry = imageBase64 ? VISION_MODELS : ['llama-3.1-8b-instant'];
 
     let systemPrompt = `Eres un experto en Selección de Personal y Redacción Curricular de la consultora Psicotec. 
     Tu tarea es profesionalizar el texto de un candidato para su CV. 
@@ -77,29 +82,41 @@ serve(async (req) => {
       });
     }
 
-    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${GROQ_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: modelToUse,
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPromptContent }
-        ],
-        temperature: field === 'autofill' ? 0.1 : 0.7,
-        max_tokens: field === 'autofill' ? 2500 : 800,
-      }),
-    })
+    let response, data;
+    for (const model of modelsToTry) {
+      response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${GROQ_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: model,
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userPromptContent }
+          ],
+          temperature: field === 'autofill' ? 0.1 : 0.7,
+          max_tokens: field === 'autofill' ? 2500 : 800,
+        }),
+      });
 
-    const data = await response.json()
+      data = await response.json();
 
-    if (!response.ok) {
-      console.error("Error de Groq:", data)
+      if (response.ok) {
+        break; // Éxito, salir del bucle
+      } else if (data?.error?.message?.includes('decommissioned') || data?.error?.message?.includes('does not exist')) {
+        console.warn(`Modelo ${model} discontinuado o inexistente. Intentando con el siguiente...`);
+        continue;
+      } else {
+        break; // Es otro tipo de error (auth, payload size, etc.) - no tiene sentido reintentar
+      }
+    }
+
+    if (!response || !response.ok) {
+      console.error("Error definitivo de Groq:", data)
       return new Response(JSON.stringify({ 
-        error: `Error de la IA (${response.status}): ${data.error?.message || 'Error desconocido'}` 
+        error: `Error de la IA (${response?.status || 500}): ${data?.error?.message || 'Error desconocido'}` 
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,
