@@ -2782,8 +2782,8 @@
     async function optimizeText(idOrElem, field) {
       const input = (typeof idOrElem === 'string') ? document.getElementById(idOrElem) : idOrElem;
       const originalText = input.value.trim();
-      if (!originalText || originalText.length < 10) {
-        return showToast('Texto corto', 'Escribí un poco más para que la IA pueda ayudarte.', '⚠️');
+      if ((!originalText || originalText.length < 10) && !JOB_POSTING_B64) {
+        return showToast('Texto corto', 'Escribí un poco más para que la IA pueda ayudarte. Opcionalmente, puedes adjuntar un aviso de trabajo para autocompletar desde cero.', '⚠️');
       }
 
       const btn = event.target;
