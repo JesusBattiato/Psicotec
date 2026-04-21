@@ -70,14 +70,14 @@ serve(async (req) => {
       }`;
       userPromptContent.push({ type: 'text', text: `Extrae de forma exhaustiva la información del CV provisto y estructúrala en el JSON solicitado.\nTexto del CV:\n${text || 'Analiza el documento/imagen adjunta.'}` });
     } else if (field === 'resumen') {
-      systemPrompt += `\nSi el usuario adjunta una captura de una OFERTA DE TRABAJO, usa esas exigencias para hacer sutilmente un "match" resaltando las habilidades clave que pide el puesto.`;
-      userPromptContent.push({ type: 'text', text: `Mejora este resumen profesional de CV, usando un lenguaje ejecutivo y orientado a logros: "${text}"` });
+      systemPrompt += `\nESTRICTAMENTE: Tu objetivo final es reescribir y mejorar el texto original del candidato. NO transcribas la captura de la oferta de trabajo. Usa la imagen de la oferta SOLO como guía estratégica para saber qué palabras clave o competencias priorizar en la reescritura del CV.`;
+      userPromptContent.push({ type: 'text', text: `Reescribe y mejora este resumen profesional del candidato usando lenguaje ejecutivo y orientado a logros. Si hay una imagen de oferta laboral adjunta, haz que el resumen resalte sutilmente por qué el candidato es ideal para ese puesto. Texto del candidato: "${text || '(Candidato en blanco - redacta un borrador genérico enfocado al puesto de la imagen)'}"` });
     } else if (field === 'skills') {
-      systemPrompt += `\nSi hay una oferta adjunta, prioriza extraer y listar las habilidades que hagan match perfecto con los requisitos de la misma.`;
-      userPromptContent.push({ type: 'text', text: `Identifica las habilidades (técnicas o blandas) en este texto: "${text}". Devuelve SOLO una lista separada por COMAS. Máximo 15.` });
+      systemPrompt += `\nESTRICTAMENTE: NO transcribas la captura de la oferta. Extrae o genera habilidades basadas en el perfil, y si hay oferta adjunta, prioriza extraer y listar las palabras clave exactas que pide la empresa.`;
+      userPromptContent.push({ type: 'text', text: `Listado de habilidades técnicas o blandas para el CV. Si hay oferta adjunta, alinéalas con lo que piden. Texto del candidato: "${text}". Devuelve SOLO una lista separada por COMAS. Máximo 15.` });
     } else {
-      systemPrompt += `\nSi hay una oferta adjunta, haz match destacando sutilmente las responsabilidades o logros que la oferta valora.`;
-      userPromptContent.push({ type: 'text', text: `Profesionaliza esta descripción de tareas laborales, enfocándote en verbos de acción: "${text}"` });
+      systemPrompt += `\nESTRICTAMENTE: NO transcribas la imagen de la oferta. Reescribe la descripción de experiencia del candidato orientándola al puesto vacante. Usa los mismos verbos y terminología de la oferta si es posible.`;
+      userPromptContent.push({ type: 'text', text: `Profesionaliza esta experiencia laboral con verbos de acción. Si hay oferta adjunta, haz match destacando sutilmente las responsabilidades que pide la oferta. Texto original: "${text}"` });
     }
 
     if (imageBase64) {
