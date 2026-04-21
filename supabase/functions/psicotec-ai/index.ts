@@ -15,7 +15,6 @@ serve(async (req) => {
 
   try {
     const body = await req.json()
-    const body = await req.json()
     const { text, field, imageBase64 } = body
     console.log(`Petición recibida para campo: ${field}. Texto: "${text?.substring(0, 20)}..." | Imagen adjunta: ${!!imageBase64}`)
 
