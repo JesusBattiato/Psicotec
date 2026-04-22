@@ -52,22 +52,24 @@ serve(async (req) => {
     let systemPrompt = `Eres un experto en Selección de Personal y Redacción Curricular de la consultora Psicotec. 
     Tu tarea es profesionalizar el texto de un candidato para su CV. 
     - Idioma: Español (Argentina/Latinoamérica).
-    - IMPORTANTE: Devuelve SOLO el texto u output solicitado, sin introducciones ni comentarios adicionales.`;
+    - IMPORTANTE: Devuelve SOLO el texto u output solicitado, sin introducciones ni comentarios adicionales.
+    - REGLA ESTRICTA: BAJO NINGUNA CIRCUNSTANCIA incluyas títulos, subtítulos, ni formato markdown (como **Experiencia Laboral** o **Resumen Profesional**). Escribe únicamente los párrafos o viñetas de contenido.`;
 
     let userPromptContent: any[] = [];
     
     if (field === 'autofill') {
       systemPrompt += `\nDevuelve la respuesta ESTRICTAMENTE en formato JSON plano usando esta estructura exacta extrayendo los datos del texto o imagen provista (asegúrate de que sea JSON válido, sin corchetes de markdown \`\`\`json al inicio, solo las llaves {}):
       {
-        "nombre": "", "apellido": "", "email": "", "tel": "", "birth_date": "", "ciudad": "", "provincia": "", 
+        "nombre": "", "apellido": "", "email": "", "tel": "", "birth_date": "YYYY-MM-DD", "ciudad": "", "provincia": "", 
         "linkedin": "", "titulo": "", "resumen": "", "puesto": "", "modalidad": "", "disp": "", "reloc": "",
         "edu1tit": "", "edu1niv": "", "edu1inst": "", "edu1anio": "",
         "edu2tit": "", "edu2inst": "", "edu2anio": "",
         "skillsh": "", "skillss": "", "idiomas": "",
         "experiencias": [
-          { "emp": "", "cargo": "", "desde": "", "hasta": "", "desc": "" }
+          { "emp": "", "cargo": "", "desde": "Mes AAAA", "hasta": "Mes AAAA o Actualmente", "desc": "" }
         ]
-      }`;
+      }
+      NOTA: Convierte SIEMPRE "birth_date" al formato AAAA-MM-DD. Convierte SIEMPRE las fechas de experiencias ("desde", "hasta") al formato texto "Mes AAAA" (ej. "Octubre 2021", "Enero 2025"). Si sigue laborando, usa "Actualmente".`;
       userPromptContent.push({ type: 'text', text: `Extrae de forma exhaustiva la información del CV provisto y estructúrala en el JSON solicitado.\nTexto del CV:\n${text || 'Analiza el documento/imagen adjunta.'}` });
     } else if (field === 'resumen') {
       systemPrompt += `\nESTRICTAMENTE: Tu objetivo final es reescribir y mejorar el texto original del candidato. NO transcribas la captura de la oferta de trabajo. Usa la imagen de la oferta SOLO como guía estratégica. MUY IMPORTANTE: NO mientas, no inventes experiencia, y no le asignes al candidato profesiones que no tiene. Si el usuario dice "soy de producción" y el aviso pide "HSE", encuentra intersecciones genuinas (como cumplimiento de normas de planta), pero NO te inventes que es un Profesional HSE. Si el texto original está muy vacío, redacta un borrador genérico y humilde que el candidato pueda usar de base.`;
