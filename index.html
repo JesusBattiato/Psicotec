@@ -3400,7 +3400,19 @@
       btn.innerHTML = originalText;
       btn.disabled = false;
 
-      populate(d);
+      // Almacenar data temporalmente para el generador
+      window.cvsGeneratedData = d;
+      
+      // Mostrar el Payment Gift Modal
+      document.getElementById('payment-gift-modal').classList.add('open');
+    }
+
+    function acceptGiftAndShowCVs() {
+      document.getElementById('payment-gift-modal').classList.remove('open');
+      
+      if (window.cvsGeneratedData) {
+        populate(window.cvsGeneratedData);
+      }
 
       const results = document.getElementById('cv-results');
       results.style.display = 'block';
