@@ -2359,6 +2359,12 @@
             </div>
           </div>
 
+          <!-- AI WARNING BLOCK -->
+          <div style="background: rgba(201, 168, 76, 0.08); border-left: 4px solid var(--gold); padding: 1.25rem; border-radius: 4px; margin-bottom: 2rem;">
+            <p style="color: var(--brown); font-weight: 600; margin-bottom: .25rem; font-size: .95rem;">⚠️ Revisión Final</p>
+            <p style="color: var(--gray-mid); font-size: .85rem; line-height: 1.5;">Revisá los casilleros, los errores ortográficos y las creaciones con IA. Hasta la Inteligencia Artificial comete errores. Siempre podrás regresar a corregir y pulir tus datos.</p>
+          </div>
+
           <!-- DB CONSENT (pre-checked) -->
           <div class="consent-box">
             <input type="checkbox" id="f-consent" checked>
@@ -3045,9 +3051,20 @@
 
     function prefillForm(d) {
       const v = (id, val) => { const e = document.getElementById(id); if (e) e.value = val || ''; };
+      const formatIsoDate = (dStr) => {
+        if (!dStr) return '';
+        if (dStr.includes('/')) {
+            const p = dStr.split('/');
+            if (p.length === 3 && p[2].length === 4) {
+                return `${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`;
+            }
+        }
+        return dStr;
+      };
+
       v('f-nombre', d.nombre); v('f-apellido', d.apellido); v('f-email', d.email);
       v('f-tel', d.tel); v('f-ciudad', d.ciudad); v('f-provincia', d.provincia);
-      v('f-nacimiento', d.birth_date);
+      v('f-nacimiento', formatIsoDate(d.birth_date));
       v('f-linkedin', d.linkedin); v('f-titulo', d.titulo); v('f-resumen', d.resumen);
       v('f-puesto', d.puesto); v('f-modalidad', d.modalidad); v('f-disponibilidad', d.disp);
       v('f-reloc', d.reloc);
@@ -3540,13 +3557,46 @@
     }
 
     /* ================================================
-       AUTO-CAPITALIZE FIRST LETTER (On Blur)
+       AUTO-CAPITALIZE & DATE NORMALIZE (On Blur)
     ================================================ */
     document.body.addEventListener('focusout', function(e) {
-      if (e.target && (e.target.classList.contains('form-input') || e.target.classList.contains('form-textarea'))) {
+      if (!e.target) return;
+      
+      // Auto-Capitalize
+      if (e.target.classList.contains('form-input') || e.target.classList.contains('form-textarea')) {
         let val = e.target.value;
         if (val && typeof val === 'string' && val.length > 0) {
           e.target.value = val.charAt(0).toUpperCase() + val.slice(1);
+        }
+      }
+
+      // Date Format Normalization (Mes AAAA)
+      if (e.target.classList.contains('dyn-desde') || e.target.classList.contains('dyn-hasta')) {
+        let str = e.target.value;
+        if (!str) return;
+        const s = str.trim().toLowerCase();
+        if (s === 'actualmente' || s === 'actualidad' || s === 'presente' || s === 'hoy') {
+          e.target.value = 'Actualmente';
+          return;
+        }
+        const regex = /(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|setiembre|octubre|noviembre|diciembre|ene|feb|mar|abr|may|jun|jul|ago|sep|set|oct|nov|dic).*?(\d{4})/i;
+        const match = s.match(regex);
+        if (match) {
+          const monthMap = {
+            'ene': 'Enero', 'enero': 'Enero', 'feb': 'Febrero', 'febrero': 'Febrero', 'mar': 'Marzo', 'marzo': 'Marzo',
+            'abr': 'Abril', 'abril': 'Abril', 'may': 'Mayo', 'mayo': 'Mayo', 'jun': 'Junio', 'junio': 'Junio',
+            'jul': 'Julio', 'julio': 'Julio', 'ago': 'Agosto', 'agosto': 'Agosto', 'sep': 'Septiembre', 'septiembre': 'Septiembre',
+            'set': 'Septiembre', 'setiembre': 'Septiembre', 'oct': 'Octubre', 'octubre': 'Octubre',
+            'nov': 'Noviembre', 'noviembre': 'Noviembre', 'dic': 'Diciembre', 'diciembre': 'Diciembre'
+          };
+          e.target.value = `${monthMap[match[1].toLowerCase()]} ${match[2]}`;
+          return;
+        }
+        const numRegex = /\b(0?[1-9]|1[0-2])[\/\-](\d{4})\b/;
+        const numMatch = s.match(numRegex);
+        if (numMatch) {
+          const mNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+          e.target.value = `${mNames[parseInt(numMatch[1], 10) - 1]} ${numMatch[2]}`;
         }
       }
     });
